@@ -31,9 +31,11 @@
                     <input type="password" id="password" placeholder="••••••••" required>
                 </div>
                 <button type="submit" class="btn-login">Ingresar</button>
-                <div class="form-links">
-                    <a href="olvide_contrase%C3%B1a.html">¿Olvidó su contraseña?</a>
-                    <a href="registro.html">Registrarse</a>
+                <div class="form-links" style="display: flex; flex-direction: column; gap: 8px; margin-top: 16px;">
+                    <div style="display: flex; flex-direction: row; gap: 12px; justify-content: center; align-items: center; margin-top: 8px;">
+                        <a href="olvide_contrase%C3%B1a.html" class="btn-secondary btn-secondary-equal">Recuperar contraseña</a>
+                        <a href="registro.html" class="btn-secondary btn-secondary-equal">Registrarse</a>
+                    </div>
                 </div>
                  <div id="loginError" class="error-message"></div>
             </form>

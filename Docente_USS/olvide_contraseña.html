@@ -29,8 +29,15 @@
                     <a href="index.html">Volver al inicio</a>
                 </div>
                 <div class="error-message" style="display:none;"></div>
+                <script>
+                    document.querySelector('.login-form').addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        window.location.href = 'correo_enviado.html';
+                    });
+                </script>
             </form>
         </div>
     </div>
-</body>
+        </div>
+    </body>
 </html>
