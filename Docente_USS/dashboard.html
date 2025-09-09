@@ -12,19 +12,22 @@
 </head>
 <body>
     <div class="dashboard-container">
-        <aside class="sidebar">
-            <div class="sidebar-header" style="text-align:left;">
-                <img src="Imagenes/Logo uss.png" alt="Logo Universidad" class="logo-uss-sidebar" style="height:60px; display:inline-block; vertical-align:middle; margin-bottom:8px;">
-                <h3 style="display:inline-block; margin-left:10px; vertical-align:middle;">Portal Docente</h3>
+        <aside class="sidebar" id="sidebar" style="position: relative;">
+            <button class="sidebar-toggle" id="sidebarToggle" title="Expandir/Colapsar" style="position: absolute; top: 32px; right: -24px; z-index: 9999; box-shadow: 0 2px 8px rgba(0,0,0,0.16); background: #fff; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 2px solid #e4e8fc;">
+                <i class="fas fa-angle-left"></i>
+            </button>
+            <div class="sidebar-header" style="text-align:center; display: flex; flex-direction: column; align-items: center;">
+                <img src="https://cdn.uss.cl/content/uploads/2022/12/14190951/favicon-uss.png" alt="Logo Universidad" class="logo-uss-sidebar">
+                <h3 style="margin-top: 10px;">Portal Docente</h3>
             </div>
             <nav class="sidebar-nav">
-                <a href="#" class="nav-link active" data-target="material"><i class="fas fa-book-open"></i> Material</a>
-                <a href="#" class="nav-link" data-target="planificacion"><i class="fas fa-edit"></i> Crear Planificación</a>
-                <a href="#" class="nav-link" data-target="bibliografia"><i class="fas fa-atlas"></i> Bibliografía</a>
-                <a href="#" class="nav-link" data-target="perfil"><i class="fas fa-user"></i> Perfil Docente</a>
+                <a href="#" class="nav-link active" data-target="material"><i class="fas fa-book-open"></i> <span>Material</span></a>
+                <a href="#" class="nav-link" data-target="planificacion"><i class="fas fa-edit"></i> <span>Crear Planificación</span></a>
+                <a href="#" class="nav-link" data-target="bibliografia"><i class="fas fa-atlas"></i> <span>Bibliografía</span></a>
+                <a href="#" class="nav-link" data-target="perfil"><i class="fas fa-user"></i> <span>Perfil Docente</span></a>
             </nav>
             <div class="sidebar-footer">
-                <a href="index.html" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+                <a href="index.html" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>Cerrar Sesión</span></a>
             </div>
         </aside>
 
@@ -126,5 +129,17 @@
         </main>
     </div>
     <script src="js/main.js"></script>
+    <script>
+// Sidebar toggle
+const sidebar = document.getElementById('sidebar');
+const sidebarToggle = document.getElementById('sidebarToggle');
+let collapsed = false;
+sidebarToggle.addEventListener('click', function() {
+    collapsed = !collapsed;
+    sidebar.classList.toggle('collapsed', collapsed);
+    // Cambia el ícono de la flecha
+    sidebarToggle.querySelector('i').className = collapsed ? 'fas fa-angle-right' : 'fas fa-angle-left';
+});
+</script>
 </body>
 </html>

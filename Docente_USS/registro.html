@@ -42,7 +42,9 @@
                                 <script>
                                     document.querySelector('.login-form').addEventListener('submit', function(e) {
                                         e.preventDefault();
+                                        var nombreInput = document.getElementById('nombre');
                                         var emailInput = document.getElementById('email');
+                                        var nombre = nombreInput.value.trim();
                                         var email = emailInput.value.trim();
                                         var errorDiv = document.getElementById('error-message');
                                         var regex = /^[^@\s]+@docente\.uss\.cl$/i;
@@ -53,7 +55,16 @@
                                             return;
                                         } else {
                                             errorDiv.style.display = 'none';
-                                            window.location.href = 'registro_enviado.html';
+                                            // Capitalizar nombre
+                                            function capitalizar(str) {
+                                                return str.split(' ').map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
+                                            }
+                                            nombre = capitalizar(nombre);
+                                            // Guardar datos en localStorage (simulación)
+                                            localStorage.setItem('userEmail', email);
+                                            localStorage.setItem('userNombre', nombre);
+                                            // Redirigir al dashboard
+                                            window.location.href = 'dashboard.html';
                                         }
                                     });
                                 </script>

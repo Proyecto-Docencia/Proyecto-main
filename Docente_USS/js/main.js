@@ -147,9 +147,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- INICIALIZACIÓN ---
     function init() {
         // Mostrar nombre de usuario
-        const userEmail = localStorage.getItem('userEmail');
-        if (userEmail) {
-            document.getElementById('userDisplayName').textContent = `Bienvenido, ${userEmail.split('@')[0]}`;
+        const userNombre = localStorage.getItem('userNombre');
+        if (userNombre) {
+            document.getElementById('userDisplayName').textContent = `Bienvenido, ${userNombre}`;
+        } else {
+            const userEmail = localStorage.getItem('userEmail');
+            if (userEmail) {
+                const nombre = userEmail.split('@')[0].split('.').map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
+                document.getElementById('userDisplayName').textContent = `Bienvenido, ${nombre}`;
+            }
         }
         
         cargarMaterial();

@@ -7,6 +7,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const emailInput = document.getElementById('email');
         const email = emailInput.value.trim();
+        // Obtener nombre desde el correo
+        let nombre = '';
+        if (email.includes('@')) {
+            const partes = email.split('@')[0].split('.');
+            nombre = partes.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
+        }
         const password = document.getElementById('password').value;
         loginError.textContent = '';
 
@@ -24,8 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         } else {
             loginError.style.display = 'none';
-            // Guardamos el email para mostrarlo en el dashboard
+            // Guardamos el email y el nombre para mostrarlo en el dashboard
             localStorage.setItem('userEmail', email);
+            if (nombre) localStorage.setItem('userNombre', nombre);
             // Redirigimos al dashboard
             window.location.href = 'dashboard.html';
         }

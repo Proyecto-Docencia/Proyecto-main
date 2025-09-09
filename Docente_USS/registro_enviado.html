@@ -16,6 +16,7 @@
             <img src="https://universidadsansebastian.hiringroom.com/data/accounts/universidadsansebastian/microsite/5ed34d01564648ad52c7afd2d49a0909.png" alt="Logo Universidad" class="logo-uss" style="height:90px; display:inline-block; vertical-align:middle;">
             <h1>Confirmar Registro</h1>
             <p>Revisa tu correo institucional.</p>
+            <p id="userDisplayName" style="font-weight:500; color:#09437c; margin-top:10px;"></p>
         </div>
         <div class="login-form-container">
             <div class="login-form" style="text-align:center;">
@@ -27,4 +28,11 @@
         </div>
     </div>
 </body>
+<script>
+    // Mostrar saludo personalizado si hay nombre guardado
+    const userNombre = localStorage.getItem('userNombre');
+    if (userNombre) {
+        document.getElementById('userDisplayName').textContent = `Bienvenido, ${userNombre}`;
+    }
+</script>
 </html>
