@@ -1,18 +1,19 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useState } from 'react';
 import Sidebar from './Sidebar';
-import Header from './Header';
+import '../css/Layout.css';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const [isSidebarMinimized, setIsSidebarMinimized] = useState(false);
+
   return (
-    <div className="flex h-screen bg-slate-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto bg-slate-50 p-6">
+    <div className="layout-container">
+      <Sidebar onExpandChange={setIsSidebarMinimized} />
+      <div className={`layout-content ${isSidebarMinimized ? 'expanded' : ''}`}>
+        <main className="layout-main">
           {children}
         </main>
       </div>

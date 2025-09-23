@@ -1,0 +1,41 @@
+/* Layout CSS - Estilo Universidad San Sebastián */
+:root {
+  --layout-bg: #f8fafc;
+  --sidebar-width: 280px;
+  --sidebar-minimized-width: 80px;
+  --header-height: auto;
+}
+
+.layout-container {
+  display: flex;
+  height: 100vh;
+  background-color: var(--layout-bg);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.layout-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-left: var(--sidebar-width);
+  transition: margin-left 0.3s ease;
+}
+
+.layout-content.expanded {
+  margin-left: var(--sidebar-minimized-width);
+}
+
+.layout-main {
+  flex: 1;
+  overflow-y: auto;
+  background-color: var(--layout-bg);
+  padding: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .layout-content {
+    margin-left: 0;
+  }
+}

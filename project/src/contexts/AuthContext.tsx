@@ -11,6 +11,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
+  registerAndLogin: () => void;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -35,12 +36,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     // Simulación de autenticación
     if (email && password) {
+      // Obtener datos del registro si existen
+      const savedEmail = localStorage.getItem('userEmail');
+      const savedNombre = localStorage.getItem('userNombre');
+      
       const mockUser: User = {
         id: '1',
-        name: 'Prof. María García',
-        email: email,
-        role: 'Docente de Matemáticas',
-        institution: 'Instituto Tecnológico Nacional'
+        name: savedNombre || 'Prof. María García',
+        email: savedEmail || email,
+        role: 'Docente',
+        institution: 'Universidad San Sebastián'
       };
       setUser(mockUser);
     }
@@ -50,9 +55,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
   };
 
+  const registerAndLogin = () => {
+    // Función para registrar automáticamente después del registro
+    const savedEmail = localStorage.getItem('userEmail');
+    const savedNombre = localStorage.getItem('userNombre');
+    
+    if (savedEmail && savedNombre) {
+      const newUser: User = {
+        id: '1',
+        name: savedNombre,
+        email: savedEmail,
+        role: 'Docente',
+        institution: 'Universidad San Sebastián'
+      };
+      setUser(newUser);
+    }
+  };
+
   const value = {
     user,
     login,
+    registerAndLogin,
     logout,
     isAuthenticated: !!user
   };
