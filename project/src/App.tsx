@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Templates from './pages/Templates';
 import Materials from './pages/Materials';
+import MaterialDetail from './pages/MaterialDetail';
 import AICenter from './pages/AICenter';
 import Profile from './pages/Profile';
 
@@ -31,6 +32,8 @@ function App() {
           <Route path="/home" element={<Home />} />
           <Route path="/plantillas" element={<Layout><Templates /></Layout>} />
           <Route path="/materiales" element={<Layout><Materials /></Layout>} />
+          <Route path="/material" element={<Layout><Materials /></Layout>} />
+          <Route path="/material/:id" element={<Layout><MaterialDetail /></Layout>} />
           <Route path="/centro-ia" element={<Layout><AICenter /></Layout>} />
           <Route path="/perfil" element={<Layout><Profile /></Layout>} />
           </Routes>
