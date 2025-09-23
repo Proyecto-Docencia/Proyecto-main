@@ -9,6 +9,9 @@ import Materials from './pages/Materials';
 import MaterialDetail from './pages/MaterialDetail';
 import AICenter from './pages/AICenter';
 import Profile from './pages/Profile';
+import PlanificacionNueva from './pages/PlanificacionNueva';
+import MisPlanificaciones from './pages/MisPlanificaciones';
+// Removed imports as they are already present
 
 import Login from './pages/Login.jsx';
 import Registro from './pages/Registro.jsx';
@@ -36,6 +39,8 @@ function App() {
           <Route path="/material/:id" element={<Layout><MaterialDetail /></Layout>} />
           <Route path="/centro-ia" element={<Layout><AICenter /></Layout>} />
           <Route path="/perfil" element={<Layout><Profile /></Layout>} />
+          <Route path="/planificacion/nueva" element={<Layout><PlanificacionNueva /></Layout>} />
+          <Route path="/planificacion/mis-planificaciones" element={<Layout><MisPlanificaciones /></Layout>} />
           </Routes>
         </div>
       </Router>

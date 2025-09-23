@@ -20,9 +20,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     setIsLoading(true);
     
     try {
-      await login(email, password);
-      onClose();
-      navigate('/dashboard');
+  await login(email, password);
+  onClose();
+  navigate('/materiales');
     } catch (error) {
       console.error('Error al iniciar sesión:', error);
     } finally {

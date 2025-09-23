@@ -14,6 +14,7 @@ interface AuthContextType {
   registerAndLogin: () => void;
   logout: () => void;
   isAuthenticated: boolean;
+  updateUser: (updates: Partial<Pick<User, 'name' | 'email' | 'role' | 'institution'>>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,7 +32,15 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  // Cargar usuario persistido si existe
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const raw = localStorage.getItem('authUser');
+      return raw ? (JSON.parse(raw) as User) : null;
+    } catch {
+      return null;
+    }
+  });
 
   const login = async (email: string, password: string) => {
     // Simulación de autenticación
@@ -48,11 +57,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         institution: 'Universidad San Sebastián'
       };
       setUser(mockUser);
+      // Persistir
+      localStorage.setItem('authUser', JSON.stringify(mockUser));
+      localStorage.setItem('userEmail', mockUser.email);
+      localStorage.setItem('userNombre', mockUser.name);
     }
   };
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem('authUser');
   };
 
   const registerAndLogin = () => {
@@ -69,7 +83,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         institution: 'Universidad San Sebastián'
       };
       setUser(newUser);
+      localStorage.setItem('authUser', JSON.stringify(newUser));
     }
+  };
+
+  const updateUser: AuthContextType['updateUser'] = (updates) => {
+    setUser(prev => {
+      const next = prev ? { ...prev, ...updates } : {
+        id: '1',
+        name: updates.name || 'Usuario',
+        email: updates.email || 'usuario@uss.cl',
+        role: updates.role || 'Docente',
+        institution: updates.institution || 'Universidad San Sebastián'
+      };
+      try {
+        localStorage.setItem('authUser', JSON.stringify(next));
+      } catch {}
+      if (updates.email) localStorage.setItem('userEmail', updates.email);
+      if (updates.name) localStorage.setItem('userNombre', updates.name);
+      return next;
+    });
   };
 
   const value = {
@@ -77,7 +110,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     registerAndLogin,
     logout,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    updateUser
   };
 
   return (

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   User, 
   Mail, 
@@ -203,23 +203,37 @@ const regionesComunas = {
 };
 
 const Profile: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   
-  const [name, setName] = useState(user?.name || 'Usuario USS');
-  const [email, setEmail] = useState(user?.email || 'usuario@uss.cl');
+  const [name, setName] = useState<string>(() => localStorage.getItem('profile_name') || user?.name || 'Usuario USS');
+  const [email, setEmail] = useState<string>(() => localStorage.getItem('profile_email') || user?.email || 'usuario@uss.cl');
   const [role] = useState(user?.role || 'Docente USS');
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [telefono, setTelefono] = useState('+56 9 8765 4321');
-  const [rut, setRut] = useState('12.345.678-9');
-  const [direccion, setDireccion] = useState('Av. Providencia 1234, Providencia');
-  const [comuna, setComuna] = useState('Providencia');
-  const [region, setRegion] = useState('Región Metropolitana');
+  const [profileImage, setProfileImage] = useState<string | null>(() => localStorage.getItem('profile_image') || null);
+  const [telefono, setTelefono] = useState<string>(() => localStorage.getItem('profile_telefono') || '+56 9 8765 4321');
+  const [rut, setRut] = useState<string>(() => localStorage.getItem('profile_rut') || '12.345.678-9');
+  const [direccion, setDireccion] = useState<string>(() => localStorage.getItem('profile_direccion') || 'Av. Providencia 1234, Providencia');
+  const [comuna, setComuna] = useState<string>(() => localStorage.getItem('profile_comuna') || 'Providencia');
+  const [region, setRegion] = useState<string>(() => localStorage.getItem('profile_region') || 'Región Metropolitana');
   
   // Estados para información académica
-  const [sede, setSede] = useState('Santiago');
-  const [facultadesSeleccionadas, setFacultadesSeleccionadas] = useState<string[]>(['Facultad de Ingeniería']);
-  const [carrerasSeleccionadas, setCarrerasSeleccionadas] = useState<string[]>(['Ingeniería Civil Informática']);
+  const [sede, setSede] = useState<string>(() => localStorage.getItem('profile_sede') || 'Santiago');
+  const [facultadesSeleccionadas, setFacultadesSeleccionadas] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem('profile_facultades');
+      return raw ? JSON.parse(raw) : ['Facultad de Ingeniería'];
+    } catch {
+      return ['Facultad de Ingeniería'];
+    }
+  });
+  const [carrerasSeleccionadas, setCarrerasSeleccionadas] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem('profile_carreras');
+      return raw ? JSON.parse(raw) : ['Ingeniería Civil Informática'];
+    } catch {
+      return ['Ingeniería Civil Informática'];
+    }
+  });
   
   // Obtener las comunas de la región seleccionada
   const comunasDisponibles = regionesComunas[region as keyof typeof regionesComunas] || [];
@@ -353,12 +367,36 @@ const Profile: React.FC = () => {
     setRut(formatted);
   };
   
-
+  // Autosave en localStorage para preservar datos al navegar/recargar
+  useEffect(() => { localStorage.setItem('profile_name', name); }, [name]);
+  useEffect(() => { localStorage.setItem('profile_email', email); }, [email]);
+  useEffect(() => { if (profileImage) { localStorage.setItem('profile_image', profileImage); } }, [profileImage]);
+  useEffect(() => { localStorage.setItem('profile_telefono', telefono); }, [telefono]);
+  useEffect(() => { localStorage.setItem('profile_rut', rut); }, [rut]);
+  useEffect(() => { localStorage.setItem('profile_direccion', direccion); }, [direccion]);
+  useEffect(() => { localStorage.setItem('profile_comuna', comuna); }, [comuna]);
+  useEffect(() => { localStorage.setItem('profile_region', region); }, [region]);
+  useEffect(() => { localStorage.setItem('profile_sede', sede); }, [sede]);
+  useEffect(() => { localStorage.setItem('profile_facultades', JSON.stringify(facultadesSeleccionadas)); }, [facultadesSeleccionadas]);
+  useEffect(() => { localStorage.setItem('profile_carreras', JSON.stringify(carrerasSeleccionadas)); }, [carrerasSeleccionadas]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     setIsEditing(false);
     console.log('Guardando datos del perfil...');
+    // Persistir explícitamente y sincronizar con AuthContext
+    localStorage.setItem('profile_name', name);
+    localStorage.setItem('profile_email', email);
+    if (profileImage) localStorage.setItem('profile_image', profileImage);
+    localStorage.setItem('profile_telefono', telefono);
+    localStorage.setItem('profile_rut', rut);
+    localStorage.setItem('profile_direccion', direccion);
+    localStorage.setItem('profile_comuna', comuna);
+    localStorage.setItem('profile_region', region);
+    localStorage.setItem('profile_sede', sede);
+    localStorage.setItem('profile_facultades', JSON.stringify(facultadesSeleccionadas));
+    localStorage.setItem('profile_carreras', JSON.stringify(carrerasSeleccionadas));
+    updateUser({ name, email });
   };
 
   const handleCancel = () => {

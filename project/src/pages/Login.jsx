@@ -66,8 +66,8 @@ const Login = () => {
       localStorage.setItem('userEmail', formData.email);
       localStorage.setItem('isAuthenticated', 'true');
       
-      // Navegar al dashboard
-      navigate('/dashboard');
+  // Redirigir directamente a la página de materiales
+  navigate('/materiales');
     } catch (error) {
       setErrors({ general: 'Error al iniciar sesión. Intente nuevamente.' });
     } finally {
