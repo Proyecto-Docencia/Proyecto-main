@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+
+  frontend:
+
+    container_name: ia_frontend
+
+    build: .
+
+    ports:
+
+      - "8080:80" # Changed port to avoid conflicts
+
+    restart: unless-stopped
+

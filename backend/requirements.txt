@@ -1,0 +1,5 @@
+# Dependencias para el backend Django
+Django>=4.2
+mysqlclient>=2.2
+gunicorn>=21.2
+django-cors-headers>=4.4

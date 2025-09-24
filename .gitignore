@@ -1,0 +1,53 @@
+# General
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.*
+*.env
+.cache/
+.temp/
+.tmp/
+.idea/
+.vscode/
+
+# Node / Frontend
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+build/
+**/build/
+.vite/
+**/.vite/
+
+# TypeScript
+*.tsbuildinfo
+
+# Python / Backend
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.tox/
+.ruff_cache/
+.python-version
+venv/
+.venv/
+**/venv/
+**/.venv/
+
+# Coverage / Reports
+coverage/
+htmlcov/
+reports/
+
+# OS / Misc
+*.swp
+*.swo
+*.orig
+
+# Docker
+**/.docker-cache/

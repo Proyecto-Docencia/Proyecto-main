@@ -1,0 +1,51 @@
+services:
+  ia_frontend:
+    container_name: ia_frontend
+    build: ./frontend
+    ports:
+      - "8080:80" # Changed port to avoid conflicts
+    restart: unless-stopped
+
+  ia_backend:
+    container_name: ia_backend
+    build: ./backend
+    ports:
+      - "8081:8000" # Changed port to avoid conflicts
+    environment:
+      - DJANGO_DEBUG=1
+      - DB_HOST=db
+      - DB_NAME=proyecto
+      - DB_USER=root
+      - DB_PASSWORD=rootpass
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: proyecto
+      MYSQL_ROOT_PASSWORD: rootpass
+    ports:
+      - "3307:3306" # Changed port to avoid conflicts
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: unless-stopped
+
+  new_api:
+    container_name: new_api
+    build: ./new_api
+    ports:
+      - "8082:8000" # Changed port to avoid conflicts
+    environment:
+      - DJANGO_DEBUG=1
+      - DB_HOST=db
+      - DB_NAME=new_api_db
+      - DB_USER=root
+      - DB_PASSWORD=rootpass
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  db_data:
