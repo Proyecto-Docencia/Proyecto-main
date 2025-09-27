@@ -51,3 +51,10 @@ reports/
 
 # Docker
 **/.docker-cache/
+
+# ChromaDB local data and venv
+chromadb/data/
+chromadb/.venv/
+
+# Archive legacy second Django service
+new_api/
