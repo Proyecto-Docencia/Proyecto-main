@@ -17,9 +17,12 @@ Preparar y subir a Hugging Face Spaces (pasos resumidos):
    # Alternativa para descargar con la CLI:
    hf download <tu-usuario>/iA_DOCENTE --repo-type=space
 
-3) Copia los archivos de `IA_DOCENTE/` al repositorio clonado del Space.
+3) Copia los archivos de `IA_DOCENTE/` al repositorio clonado del Space, o usa los scripts incluidos:
 
-4) En el directorio del Space:
+   - PowerShell (Windows): ejecuta `IA_DOCENTE\deploy_to_hf.ps1` y sigue las instrucciones.
+   - Bash (Linux/macOS): `./IA_DOCENTE/deploy_to_hf.sh <usuario/space>`
+
+4) En el directorio del Space (si copias manualmente):
    git add app.py requirements.txt README.md
    git commit -m "Add IA Docente Gradio app"
    git push
