@@ -1,7 +1,8 @@
 /* Sidebar CSS - Estilo USS según imágenes de referencia */
 .sidebar {
   width: 280px;
-  background: #1e3a8a;
+  /* Azul aclarado con gradiente para dar profundidad y mejor legibilidad del escudo */
+  background: linear-gradient(165deg,#c3c8cc 0%, #003464 55%, #002b5c 80%);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -38,34 +39,42 @@
   right: 15px;
   background: none;
   border: none;
-  color: white;
+  color: var(--color-bg);
   cursor: pointer;
   font-size: 18px;
   padding: 8px;
   border-radius: 4px;
+  transition: background-color var(--transition-fast);
 }
 
 .sidebar-toggle:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
 .sidebar-logo {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 10px;
+  justify-content: center; /* Centrar verticalmente dentro del header */
+  flex: 1; /* Ocupar el espacio disponible para poder centrar */
+  margin-top: 0;
+  width: 100%;
 }
 
-.sidebar-logo-icon {
-  width: 80px;
-  height: 80px;
-  background: white;
-  border-radius: 50%;
+ .sidebar-logo-icon {
+  /* Sin fondo ni borde: solo el SVG limpio */
+  width: 100%;
+  max-width: 140px; /* límite para que no rompa el header */
+  height: auto;
+  background: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 15px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  margin-bottom: 10px;
+  padding: 0;
 }
 
 .sidebar.minimized .sidebar-logo-icon {
@@ -164,7 +173,8 @@
   text-align: left;
   border-radius: 0;
   height: 54px; /* Altura fija para centrar íconos de forma consistente */
-  transition: background-color 0.2s ease;
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+  border: 1px solid transparent; /* Para poder mostrar contorno dorado al activar */
   position: relative;
 }
 
@@ -194,13 +204,39 @@
 
 .sidebar-item-header:hover {
   background-color: rgba(255, 255, 255, 0.15);
-  color: white;
+  color: var(--color-bg);
 }
 
-.sidebar-item-header.active {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
+.sidebar-item-header.active,
+.sidebar-item-header[aria-current="page"],
+.sidebar-item-header.is-active {
+  background-color: var(--color-accent);
+  color: var(--color-primary);
   font-weight: 600;
+  border-color: var(--color-accent-hover);
+  box-shadow: 0 0 0 1px var(--color-accent-hover), 0 1px 3px rgba(0,0,0,0.25);
+}
+
+/* Hover sobre un item ya activo: ligeramente más intenso */
+.sidebar-item-header.active:hover,
+.sidebar-item-header[aria-current="page"]:hover,
+.sidebar-item-header.is-active:hover {
+  background-color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+/* Efecto al presionar (mousedown) cualquier item: feedback dorado temporal */
+.sidebar-item-header:active:not(.active):not(.is-active) {
+  background-color: var(--color-accent);
+  color: var(--color-primary);
+  border-color: var(--color-accent-hover);
+}
+
+/* Accesibilidad: foco por teclado */
+.sidebar-item-header:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring-accent);
+  border-color: var(--color-accent-hover);
 }
 
 .sidebar-icon {
@@ -247,6 +283,7 @@
   max-height: 0;
   overflow: hidden;
   background-color: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(2px);
 }
 
 .sidebar.minimized .sidebar-submenu {
@@ -267,9 +304,23 @@
 }
 
 .sidebar-submenu-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.15);
   color: white;
   text-decoration: none;
+}
+
+/* Submenu activo con estilo dorado también */
+.sidebar-submenu-item.active,
+.sidebar-submenu-item[aria-current="page"],
+.sidebar-submenu-item.is-active {
+  background: var(--color-accent);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.sidebar-submenu-item:active:not(.active):not(.is-active) {
+  background: var(--color-accent);
+  color: var(--color-primary);
 }
 
 .sidebar-footer {
@@ -316,7 +367,7 @@
 }
 
 .sidebar-logout:hover {
-  color: #fca5a5;
+  color: var(--color-accent);
   background: none;
 }
 

@@ -2,10 +2,10 @@
 
 /* Variables CSS consistentes con USS */
 :root {
-  --primary-color: #1e3a8a; /* Azul USS */
-  --primary-hover: #1e40af;
+  --primary-color: var(--color-primary); /* Azul Institucional */
+  --primary-hover: var(--color-primary-hover);
   --secondary-color: #64748b;
-  --accent-color: #3b82f6;
+  --accent-color: var(--color-accent);
   --success-color: #16a34a;
   --warning-color: #f59e0b;
   --error-color: #dc2626;
@@ -16,14 +16,15 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --gradient-primary: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
-  --gradient-background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  --gradient-primary: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  --gradient-background: linear-gradient(135deg, var(--color-bg-alt) 0%, var(--color-bg-alt-2) 100%);
 }
 
 /* Layout principal de Materials */
 .materials-container {
   min-height: calc(100vh - 80px);
-  background: var(--gradient-background);
+  /* Hacemos transparente para que se vea la imagen institucional colocada detrás */
+  background: transparent;
   padding: 2rem;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
@@ -240,6 +241,13 @@
   background: #f0fdf4;
 }
 
+/* Indicador de Video */
+.icon-indicator.video {
+  color: #dc2626; /* rojo para diferenciar */
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
 .btn-small {
   padding: 0.5rem 0.75rem;
   font-size: 0.75rem;
@@ -415,6 +423,167 @@
   display: flex;
   flex-direction: column;
 }
+
+/* ============== NUEVO CHAT LATERAL (flecha) ============== */
+.chat-slide-toggle {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px 0 0 6px;
+  padding: 10px 8px; /* más espacio para icono grande */
+  cursor: pointer;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .2s, box-shadow .2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+.chat-slide-toggle:hover { background: var(--color-primary-hover); }
+.chat-slide-toggle:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+.chat-side-wrapper {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  /* Ancho del panel (ajustado nuevamente). Puedes cambiar solo este valor y el padding usará la variable. */
+  --chat-side-width: 560px; /* ancho reducido un poco más */
+  width: var(--chat-side-width);
+  max-width: 90vw;
+  transform: translateX(100%);
+  transition: transform .35s cubic-bezier(.4,.1,.2,1);
+  z-index: 65;
+  pointer-events: none;
+}
+.chat-side-wrapper.visible { transform: translateX(0); pointer-events: auto; }
+
+.chat-side-inner {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  /* Replica aproximada del fondo del Chatbot: claro con suave gradiente */
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-left: 1px solid var(--color-border);
+}
+
+.chat-side-header {
+  padding: 14px 18px 12px 18px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffffcc;
+  backdrop-filter: blur(4px);
+}
+.chat-side-title { display:flex; align-items:center; gap:8px; }
+.chat-side-title h3 { margin:0; font-size: 15px; font-weight:600; color: var(--color-text-strong); }
+.chat-side-badge {
+  background: linear-gradient(to-br, #2563eb, #4f46e5); /* azul similar Chatbot avatar */
+  background: linear-gradient(135deg,#2563eb,#4f46e5);
+  color: #fff;
+  font-weight: 600;
+  font-size: 11px;
+  padding: 6px 8px 5px;
+  border-radius: 50%;
+  min-width: 34px;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: .5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.chat-side-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 20px 10px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scroll-behavior: smooth;
+  background: #f1f5f9; /* slate-50 */
+}
+.chat-side-messages::-webkit-scrollbar { width: 10px; }
+.chat-side-messages::-webkit-scrollbar-track { background: transparent; }
+.chat-side-messages::-webkit-scrollbar-thumb { background: var(--color-scroll-thumb); border-radius: 6px; }
+
+.cs-msg { display:flex; }
+.cs-msg.user { justify-content: flex-end; }
+.cs-msg.ai { justify-content: flex-start; }
+.cs-bubble {
+  max-width: 78%;
+  padding: 12px 16px;
+  border-radius: 22px;
+  font-size: 14px;
+  line-height: 1.5;
+  position: relative;
+  background: #2563eb; /* blue-600 */
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  animation: fadeIn .25s ease;
+}
+.cs-msg.ai .cs-bubble {
+  background: #ffffff;
+  color: #1e293b; /* slate-800 */
+  border: 1px solid #e2e8f0; /* slate-200 */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+@keyframes fadeIn { from {opacity:0; transform: translateY(4px);} to {opacity:1; transform: translateY(0);} }
+
+.chat-side-input-row {
+  padding: 16px 18px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  gap: 14px;
+  background: #ffffff;
+}
+.chat-side-input {
+  flex: 1;
+  border: 1px solid #cbd5e1; /* slate-300 */
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  background: #ffffff;
+  color: #1e293b;
+  transition: border-color .2s, background .2s, box-shadow .2s;
+}
+.chat-side-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.25); }
+.chat-side-send {
+  background: linear-gradient(135deg,#2563eb,#4f46e5); /* mismo gradiente que badge AI */
+  color: #fff;
+  font-weight: 500;
+  padding: 0 22px;
+  border-radius: 12px;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .25s ease, transform .2s;
+  box-shadow: 0 4px 10px -2px rgba(37,99,235,.4);
+}
+.chat-side-send:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+.chat-side-send:active:not(:disabled) { transform: translateY(0); filter: brightness(0.95); }
+.chat-side-send:focus-visible { outline:2px solid #2563eb; outline-offset:2px; }
+.chat-side-send:disabled { opacity: .6; cursor: default; }
+
+@media (max-width: 900px) {
+  .chat-slide-toggle { top: auto; bottom: 20px; transform: none; right: 12px; border-radius: 8px; }
+  .chat-side-wrapper { width: 100%; max-width: 100%; }
+  .chat-side-inner { border-left: none; }
+}
+
+/* Antiguos estilos de chat (FAB) quedan sin uso tras rediseño */
+
+/* (Se eliminó el comportamiento de desplazar el grid cuando el chat está abierto) */
 
 .chat-header {
   padding: 1rem;

@@ -16,20 +16,21 @@ export interface Material {
 // Enlaces de video y PDF por material
 const videoLinks: Record<number, string> = {
   1: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-  2: 'https://www.youtube.com/embed/9bZkp7q19f0',
-  3: 'https://www.youtube.com/embed/3JZ_D3ELwOQ',
-  4: 'https://www.youtube.com/embed/L_jWHffIx5E',
-  5: 'https://www.youtube.com/embed/tVj0ZTS4WF4',
-  6: 'https://www.youtube.com/embed/fJ9rUzIMcZQ',
+  2: 'https://www.youtube.com/embed/YZzB1Uca7n0',
+  3: 'https://www.youtube.com/watch?v=d6GiN04gviQ', 
+  4: 'https://www.youtube.com/watch?v=w1a6HLa2IdY', 
+  5: 'https://www.youtube.com/watch?v=ndZeu0ZVRzI', 
+  6: 'https://youtu.be/LejZzqt-vdc', 
 };
 
 const pdfLinks: Record<number, string> = {
-  // Solo disponibles: capítulos 2, 3 y 6
+  // Disponibles físicamente en /public/docs: 2, 3, 4, 5, 6 (notar acentos en algunos archivos)
   1: '',
   2: '/docs/Capitulo2.pdf',
   3: '/docs/Capitulo3.pdf',
-  4: '',
-  5: '',
+  // Archivos en disco: Cápitulo4.pdf (con tilde en la A) y Capítulo5.pdf (tilde en la i)
+  4: '/docs/C%C3%A1pitulo4.pdf', // encodeURI('Cápitulo4.pdf')
+  5: '/docs/Cap%C3%ADtulo5.pdf', // encodeURI('Capítulo5.pdf')
   6: '/docs/Capitulo6.pdf',
 };
 
@@ -102,10 +103,10 @@ export const materials: Material[] = [
   },
   {
     id: 4,
-    title: 'Simulador de Reacciones Químicas',
+    title: 'Capítulo 4 - Pensamiento Crítico',
     description:
-      'Herramienta interactiva para experimentar con diferentes reacciones químicas.',
-    type: 'SIMULADOR',
+      'Explora el desarrollo del pensamiento crítico en contextos universitarios mediante el uso de IA generativa. Presenta estrategias para fomentar el análisis, la argumentación y la toma de decisiones informadas, integrando la IA como herramienta para enriquecer debates, evaluar posturas y promover la reflexión ética.',
+    type: 'CAPÍTULO',
     subject: 'Química',
     grade: '5° Secundaria',
     isAI: true,
@@ -117,10 +118,10 @@ export const materials: Material[] = [
   },
   {
     id: 5,
-    title: 'Historia de la Revolución Industrial',
+    title: 'Capítulo 5 - Trabajo Autónomo',
     description:
-      'Presentación multimedia con línea de tiempo y mapas interactivos.',
-    type: 'MULTIMEDIA',
+      'Propone un enfoque para fortalecer el trabajo autónomo en estudiantes universitarios con apoyo de IA generativa. Detalla fases de planificación, ejecución y evaluación individual, destacando el rol de la IA en la organización de tareas, generación de ideas, retroalimentación personalizada y mejora continua del aprendizaje.',
+    type: 'CAPÍTULO',
     subject: 'Historia',
     grade: '3° Secundaria',
     isAI: true,
@@ -132,9 +133,9 @@ export const materials: Material[] = [
   },
   {
     id: 6,
-    title: 'Capítulo 6 - Evaluación y Retroalimentación con IAGen',
+    title: 'Capítulo 6 - Trabajo Colaborativo',
     description:
-      'Marco y pautas para evaluar aprendizajes con apoyo de IA generativa, con énfasis en retroalimentación formativa y criterios de calidad.',
+      'Guía práctica para integrar la IA generativa como miembro activo en equipos de trabajo colaborativo universitario. Propone un ciclo de planificación, ejecución y evaluación centrado en habilidades como co-creación, pensamiento crítico y comunicación, con énfasis en el rol ético y estratégico de la IA en procesos de aprendizaje compartido.',
     type: 'CAPÍTULO',
     subject: 'Educación universitaria / Transversal',
     grade: 'N/A',

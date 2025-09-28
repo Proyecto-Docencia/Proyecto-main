@@ -69,10 +69,22 @@ const Chatbot: React.FC = () => {
   };
 
   return (
-    <div
-      className="min-h-[calc(100vh-0px)] p-6"
-      style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}
-    >
+    <div style={{ position:'relative', minHeight:'calc(100vh - 80px)' }}>
+      <div style={{
+        position:'absolute',
+        inset:0,
+        background:"url('/docs/FondoPortalUSS.jpg') center/cover no-repeat fixed",
+        opacity:1,
+        zIndex:0
+      }} />
+      <div style={{
+        position:'absolute',
+        inset:0,
+        background:'rgba(255,255,255,0.25)',
+        backdropFilter:'blur(0.5px)',
+        zIndex:1
+      }} />
+    <div className="min-h-[calc(100vh-0px)] p-6" style={{ position:'relative', zIndex:2 }}>
       <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-[calc(100vh-140px)]">
         {/* Header */}
         <div className="p-5 border-b border-slate-200 flex items-center gap-3">
@@ -123,7 +135,14 @@ const Chatbot: React.FC = () => {
             />
             <button
               onClick={send}
-              className="px-4 py-3 rounded-lg bg-purple-500 hover:bg-purple-600 text-white font-medium flex items-center gap-2"
+              className="px-4 py-3 rounded-lg text-white font-medium flex items-center gap-2 shadow-sm"
+              style={{
+                background: 'linear-gradient(135deg,#2563eb,#4f46e5)',
+                boxShadow: '0 4px 10px -2px rgba(37,99,235,.4)'
+              }}
+              onMouseDown={(e) => (e.currentTarget.style.filter = 'brightness(0.95)')}
+              onMouseUp={(e) => (e.currentTarget.style.filter = '')}
+              onMouseLeave={(e) => (e.currentTarget.style.filter = '')}
               aria-label="Enviar"
             >
               <Send className="w-4 h-4" />
@@ -133,6 +152,7 @@ const Chatbot: React.FC = () => {
           <div className="text-xs text-slate-500 mt-2">Sugerencia: "¿Cómo puedo hacer más atractiva una clase sobre fracciones?"</div>
         </div>
       </div>
+    </div>
     </div>
   );
 };

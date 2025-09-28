@@ -11,8 +11,10 @@ import AICenter from './pages/AICenter';
 import Profile from './pages/Profile';
 import PlanificacionNueva from './pages/PlanificacionNueva';
 import MisPlanificaciones from './pages/MisPlanificaciones';
+import PlanificacionAsistenteIA from './pages/PlanificacionAsistenteIA';
+import VerificacionIA from './pages/VerificacionIA';
+import Welcome from './pages/Welcome';
 import Chatbot from './pages/Chatbot';
-// Removed imports as they are already present
 
 import Login from './pages/Login.jsx';
 import Registro from './pages/Registro.jsx';
@@ -32,6 +34,7 @@ function App() {
           <Route path="/correo-enviado" element={<CorreoEnviado />} />
           <Route path="/registro-enviado" element={<RegistroEnviado />} />
           <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+          <Route path="/bienvenida" element={<Layout><Welcome /></Layout>} />
           {/* Rutas antiguas, si se requieren */}
           <Route path="/home" element={<Home />} />
           <Route path="/plantillas" element={<Layout><Templates /></Layout>} />
@@ -40,8 +43,12 @@ function App() {
           <Route path="/material/:id" element={<Layout><MaterialDetail /></Layout>} />
           <Route path="/centro-ia" element={<Layout><AICenter /></Layout>} />
           <Route path="/chatbot" element={<Layout><Chatbot /></Layout>} />
+          {/* Alias para compatibilidad con enlace anterior */}
+          <Route path="/asistenteIA" element={<Layout><Chatbot /></Layout>} />
           <Route path="/perfil" element={<Layout><Profile /></Layout>} />
           <Route path="/planificacion/nueva" element={<Layout><PlanificacionNueva /></Layout>} />
+          <Route path="/planificacion/asistente-ia" element={<Layout><PlanificacionAsistenteIA /></Layout>} />
+          <Route path="/planificacion/verificacion" element={<Layout><VerificacionIA /></Layout>} />
           <Route path="/planificacion/mis-planificaciones" element={<Layout><MisPlanificaciones /></Layout>} />
           </Routes>
         </div>

@@ -1,6 +1,6 @@
 /* Dashboard CSS - Versión Simple */
 .dashboard-container {
-  background: #f8fafc;
+  background: var(--color-bg-alt);
   min-height: 100vh;
   padding: 0;
 }
@@ -12,33 +12,33 @@
 }
 
 .welcome-section {
-  background: white;
+  background: var(--color-bg);
   border-radius: 12px;
   padding: 30px;
   margin-bottom: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--color-border);
 }
 
 .welcome-title {
-  color: #1f2937;
+  color: var(--color-primary);
   font-size: 2rem;
   font-weight: 700;
   margin: 0 0 10px 0;
 }
 
 .welcome-subtitle {
-  color: #6b7280;
+  color: var(--color-text-soft);
   font-size: 1.1rem;
   margin: 0;
 }
 
 .content-area {
-  background: white;
+  background: var(--color-bg);
   border-radius: 12px;
   padding: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--color-border);
 }
 
 /* Responsive */
