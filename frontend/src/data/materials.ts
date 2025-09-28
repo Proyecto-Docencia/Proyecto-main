@@ -17,10 +17,10 @@ export interface Material {
 const videoLinks: Record<number, string> = {
   1: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
   2: 'https://www.youtube.com/embed/YZzB1Uca7n0',
-  3: 'https://www.youtube.com/embed/VIDEO_CAP3_ID', // reemplazo del mp4 local eliminado
-  4: 'https://www.youtube.com/embed/VIDEO_CAP4_ID', // reemplazo del mp4 local eliminado
-  5: 'https://www.youtube.com/embed/VIDEO_CAP5_ID', // reemplazo del mp4 local eliminado
-  6: 'https://www.youtube.com/embed/VIDEO_CAP6_ID', // reemplazo del mp4 local eliminado
+  3: 'https://www.youtube.com/watch?v=d6GiN04gviQ', 
+  4: 'https://www.youtube.com/watch?v=w1a6HLa2IdY', 
+  5: 'https://www.youtube.com/watch?v=ndZeu0ZVRzI', 
+  6: 'https://youtu.be/LejZzqt-vdc', 
 };
 
 const pdfLinks: Record<number, string> = {
