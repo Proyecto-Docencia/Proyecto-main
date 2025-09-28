@@ -1,0 +1,9 @@
+Se añadió el intento real al backend con fetch y cookies (credentials: 'include').
+Se incorporó el fallback local si el backend no responde (modo desarrollo cómodo).
+Se amplió la limpieza de claves en logout.
+Se introdujo la función registerAndLogin para auto-loguear después de un registro simulado.
+Se mejoró la generación de nombre legible desde el email.
+Se agregó updateUser con persistencia incremental.
+Se centralizó la persistencia del objeto completo (authUser) en vez de múltiples trozos dispersos.
+Se añadieron defensas con try/catch alrededor de localStorage.
+Se normalizó la interfaz User con institution y role fijos por defecto.
