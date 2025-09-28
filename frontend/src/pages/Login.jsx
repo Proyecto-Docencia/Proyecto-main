@@ -78,8 +78,8 @@ const Login = () => {
       if (!localStorage.getItem('profile_facultades')) localStorage.setItem('profile_facultades', JSON.stringify(['Facultad de Ingeniería']));
       if (!localStorage.getItem('profile_carreras')) localStorage.setItem('profile_carreras', JSON.stringify(['Ingeniería Civil Informática']));
 
-      // Redirigir a materiales (ruta original)
-      navigate('/materiales');
+  // Redirigir a página de bienvenida
+  navigate('/bienvenida');
     } catch (error) {
       console.error('Login error:', error);
       setErrors({ general: 'Error al iniciar sesión. Intente nuevamente.' });

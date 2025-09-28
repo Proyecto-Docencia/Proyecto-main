@@ -1,10 +1,15 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { crearPlanificacion } from '../utils/api';
 import '../css/Profile.css';
+import { loadAssistedDraft, clearAssistedDraft } from '../utils/planningStorage';
+import { useNavigate } from 'react-router-dom';
 
 const PlanificacionNueva: React.FC = () => {
   const { user } = useAuth();
+
+  const navigate = useNavigate();
+  const email = user?.email || null;
 
   const [form, setForm] = useState({
     title: '',
@@ -19,6 +24,24 @@ const PlanificacionNueva: React.FC = () => {
   const printRef = useRef<HTMLDivElement>(null);
 
   const preview = useMemo(() => ({ ...form }), [form]);
+
+  // Precargar borrador asistido si existe
+  useEffect(() => {
+    const draft = loadAssistedDraft(email);
+    if (draft) {
+      setForm({
+        title: draft.title,
+        subject: draft.subject,
+        grade: draft.grade,
+        objectives: draft.objectives,
+        activities: draft.activities,
+        resources: draft.resources,
+        evaluation: draft.evaluation,
+      });
+      // Limpiar para no volver a pisar futuros cambios
+      clearAssistedDraft(email);
+    }
+  }, [email]);
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -85,6 +108,7 @@ const PlanificacionNueva: React.FC = () => {
               <div style={{display:'flex', gap:'8px'}}>
                 <button className="profile-edit-btn" onClick={handleSave}>Guardar</button>
                 <button className="profile-edit-btn" onClick={handlePrint}>Descargar</button>
+                <button className="profile-edit-btn editing" onClick={() => navigate('/planificacion/verificacion')}>Verificación de Planificación</button>
               </div>
             </div>
 

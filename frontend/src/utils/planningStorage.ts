@@ -146,3 +146,57 @@ export function deletePlanning(userEmail: string, id: string) {
   const list = loadPlannings(userEmail).filter(p => p.id !== id);
   savePlannings(userEmail, list);
 }
+
+// ===================== Borrador asistido por IA =====================
+interface AssistedDraft {
+  title: string;
+  subject: string;
+  grade: string;
+  objectives: string;
+  activities: string;
+  resources: string;
+  evaluation: string;
+  updatedAt: string; // ISO
+}
+
+const assistedKey = (email?: string | null) => `planning:assisted-draft:${email || 'guest'}`;
+
+export function saveAssistedDraft(email: string | null | undefined, draft: Omit<AssistedDraft,'updatedAt'>) {
+  const payload: AssistedDraft = { ...draft, updatedAt: new Date().toISOString() };
+  try { localStorage.setItem(assistedKey(email || undefined), JSON.stringify(payload)); } catch {}
+}
+
+export function loadAssistedDraft(email: string | null | undefined): AssistedDraft | null {
+  try {
+    const raw = localStorage.getItem(assistedKey(email || undefined));
+    return raw ? (JSON.parse(raw) as AssistedDraft) : null;
+  } catch { return null; }
+}
+
+export function clearAssistedDraft(email: string | null | undefined) {
+  try { localStorage.removeItem(assistedKey(email || undefined)); } catch {}
+}
+
+// ===================== Resultado de verificación IA =====================
+interface VerificationResult {
+  status: 'pending' | 'ok' | 'fail';
+  issues?: string[]; // si falla
+  checkedAt: string; // ISO
+}
+
+const verificationKey = (email?: string | null) => `planning:verification:${email || 'guest'}`;
+
+export function saveVerification(email: string | null | undefined, result: VerificationResult) {
+  try { localStorage.setItem(verificationKey(email), JSON.stringify(result)); } catch {}
+}
+
+export function loadVerification(email: string | null | undefined): VerificationResult | null {
+  try {
+    const raw = localStorage.getItem(verificationKey(email));
+    return raw ? (JSON.parse(raw) as VerificationResult) : null;
+  } catch { return null; }
+}
+
+export function clearVerification(email: string | null | undefined) {
+  try { localStorage.removeItem(verificationKey(email)); } catch {}
+}

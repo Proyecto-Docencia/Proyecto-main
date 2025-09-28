@@ -34,6 +34,8 @@ body {
   justify-content: center;
   align-items: center;
   padding: 20px;
+  /* Background image from /public/docs with overlay gradient */
+  background: url('/docs/FondoPortalUSS.jpg') center/cover no-repeat fixed;
 }
 
 .login-container {

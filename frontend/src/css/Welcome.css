@@ -1,0 +1,91 @@
+/* Estilos para la página de bienvenida con fondo institucional */
+
+.welcome-page {
+  min-height: calc(100vh - 80px);
+  padding: 48px 32px;
+  max-width: 960px;
+  margin: 0 auto;
+  font-family: Inter, system-ui, sans-serif;
+  position: relative;
+  z-index: 0;
+}
+
+/* Fondo institucional (imagen) aplicado al body contenedor externo */
+.welcome-background-wrapper {
+  position: relative;
+  min-height: calc(100vh - 0px);
+  width: 100%;
+  background: url('/docs/FondoPortalUSS.jpg') center/cover no-repeat fixed;
+  --welcome-overlay-opacity: 0.20; /* antes 0.82 */
+  display: flex;
+  align-items: flex-start;
+}
+
+/* Capa de velo para mejorar legibilidad (ajustar --welcome-overlay-opacity si se desea) */
+.welcome-background-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,var(--welcome-overlay-opacity));
+  backdrop-filter: blur(1.5px);
+  z-index: 0;
+}
+
+/* Contenido encima del overlay */
+.welcome-page > * { position: relative; z-index: 1; }
+
+.welcome-header h1 {
+  font-size: 2.25rem;
+  line-height: 1.2;
+  margin: 0 0 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.welcome-header p {
+  font-size: 1.05rem;
+  color: var(--color-text-soft);
+  margin: 0;
+  max-width: 720px;
+}
+
+.welcome-cards {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin: 48px 0;
+}
+
+.welcome-card {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 20px 22px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  backdrop-filter: blur(1px);
+}
+
+.welcome-card h3 { margin: 0; font-size: 1.05rem; font-weight: 600; color: var(--color-primary); }
+.welcome-card p { margin: 0; font-size: .85rem; line-height: 1.5; color: var(--color-text-soft); }
+
+.welcome-block {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 32px 28px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(1px);
+}
+
+.welcome-block h2 { margin: 0 0 12px; font-size: 1.5rem; font-weight: 600; color: var(--color-primary); }
+.welcome-block ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; font-size: .93rem; color: var(--color-text); }
+.welcome-block p { margin-top: 18px; font-size: .85rem; color: var(--color-text-soft); }
+
+@media (max-width: 640px){
+  .welcome-page { padding: 40px 20px; }
+  .welcome-header h1 { font-size: 1.9rem; }
+  .welcome-cards { margin: 36px 0; }
+}

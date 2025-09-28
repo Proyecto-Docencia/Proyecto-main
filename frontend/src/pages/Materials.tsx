@@ -6,12 +6,10 @@ import {
   FileText,
   Presentation,
   GraduationCap,
-  Bot,
-  X,
-  MessageCircle,
   ChevronRight,
   Volume2,
-  FileDown
+  FileDown,
+  ChevronLeft
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import '../css/Materials.css';
@@ -70,7 +68,31 @@ const Materials: React.FC = () => {
   }, [chatMessages]);
 
   return (
-    <div className="materials-container">
+    <div style={{
+      position: 'relative',
+      minHeight: 'calc(100vh - 80px)'
+    }}>
+      {/* Fondo institucional */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        /* Primer intento en /docs, fallback raíz */
+        background: "url('/docs/FondoPortalUSS.jpg'), url('/FondoPortalUSS.jpg')",
+        backgroundPosition: 'center',
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+        zIndex: 0,
+        opacity: 1
+      }} />
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'rgba(255,255,255,0.25)',
+        backdropFilter: 'blur(0.5px)',
+        zIndex: 1
+      }} />
+    <div className="materials-container" style={{ position:'relative', zIndex:2 }}>
       <div className="materials-wrapper">
         {/* Header USS con información del usuario */}
         <div className="materials-header">
@@ -129,6 +151,14 @@ const Materials: React.FC = () => {
                         PDF
                       </div>
                     )}
+                    {/* Video: mostrar si hay video */}
+                    {material.video && (
+                      <div className="icon-indicator video">
+                        {/* Reutilizamos Presentation como símbolo de video/multimedia */}
+                        <Presentation className="w-3 h-3" />
+                        Video
+                      </div>
+                    )}
                   </div>
                   
                   {/* Botón funcional de detalles */}
@@ -148,65 +178,51 @@ const Materials: React.FC = () => {
   {/* La vista detallada se navega en la misma pestaña (/material/:id) */}
       </div>
 
-      {/* Botón flotante de chat USS */}
+      {/* Toggle lateral estilo flecha */}
       <button
-        className="chat-fab"
-        onClick={() => setChatOpen(!chatOpen)}
-        aria-label={chatOpen ? 'Cerrar chat' : 'Abrir chat de IA'}
+        className={`chat-slide-toggle ${chatOpen ? 'open' : ''}`}
+        onClick={() => setChatOpen(o => !o)}
+        aria-label={chatOpen ? 'Ocultar asistencia IA' : 'Mostrar asistencia IA'}
       >
-        {chatOpen ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
+        {chatOpen ? <ChevronRight className="w-8 h-8" /> : <ChevronLeft className="w-8 h-8" />}
       </button>
 
-      {/* Panel de chat USS */}
-      {chatOpen && (
-        <div className="chat-panel animate-slide-in-right">
-          <div className="chat-header">
-            <div className="flex items-center gap-2">
-              <Bot className="w-5 h-5" />
-              <h3>Asistente IA USS</h3>
+      <div className={`chat-side-wrapper ${chatOpen ? 'visible' : ''}`} aria-hidden={!chatOpen}>
+        <div className="chat-side-inner">
+          <div className="chat-side-header">
+            <div className="chat-side-title">
+              <span className="chat-side-badge">AI</span>
+              <h3>Asistencia IA USS</h3>
             </div>
-            <button 
-              onClick={() => setChatOpen(false)}
-              className="chat-close"
-            >
-              <X className="w-5 h-5" />
-            </button>
           </div>
-
-          <div className="chat-messages">
-            {chatMessages.map((message, index) => (
-              <div key={index} className={`chat-message ${message.role}`}>
-                <div className="chat-message-content">
-                  {message.text}
-                </div>
+          <div className="chat-side-messages" role="log">
+            {chatMessages.map((m, i) => (
+              <div key={i} className={`cs-msg ${m.role}`}> 
+                <div className="cs-bubble">{m.text}</div>
               </div>
             ))}
             <div ref={chatEndRef} />
           </div>
-
-          <form onSubmit={sendMessage} className="chat-input-form">
+          <form onSubmit={sendMessage} className="chat-side-input-row">
             <input
               type="text"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Pregunta sobre los materiales..."
-              className="chat-input"
+              placeholder="Escribe tu consulta..."
+              className="chat-side-input"
               disabled={chatLoading}
             />
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={chatLoading || !chatInput.trim()}
-              className="chat-send"
+              className="chat-side-send"
             >
-              {chatLoading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                'Enviar'
-              )}
+              {chatLoading ? '...' : 'Enviar'}
             </button>
           </form>
         </div>
-      )}
+      </div>
+    </div>
     </div>
   );
 };

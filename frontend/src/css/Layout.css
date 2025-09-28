@@ -1,6 +1,6 @@
 /* Layout CSS - Estilo Universidad San Sebastián */
 :root {
-  --layout-bg: #f8fafc;
+  --layout-bg: var(--color-bg-alt);
   --sidebar-width: 280px;
   --sidebar-minimized-width: 80px;
   --header-height: auto;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { 
   User, 
   Mail, 
@@ -7,11 +7,14 @@ import {
   GraduationCap, 
   Edit,
   Save,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchProfile, saveProfile } from '../utils/api';
 import '../css/Profile.css';
+import '../css/Materials.css'; /* Reutilizamos estilos del chat lateral */
 
 // Datos reales de la Universidad San Sebastián
 const sedesFacultadesCarreras = {
@@ -463,8 +466,58 @@ const Profile: React.FC = () => {
     }
   };
 
+  /* ====== ESTADO Y LÓGICA DEL CHAT (reutilizado de Materials) ====== */
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatMessages, setChatMessages] = useState<Array<{role:'user'|'ai'; text:string}>>([
+    { role: 'ai', text: 'Hola, soy tu asistente IA USS. ¿Qué duda sobre tu perfil o datos académicos tienes?' }
+  ]);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
+
+  const sendChatMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim() || chatLoading) return;
+    const content = chatInput;
+    setChatInput('');
+    setChatLoading(true);
+    setChatMessages(prev => [...prev, { role: 'user', text: content }]);
+    try {
+      await new Promise(r => setTimeout(r, 800));
+      const ai = `Recibí tu mensaje: "${content}". Puedo ayudarte a actualizar datos, comprender facultades o carreras. ¿Deseas modificar algo específico de tu perfil?`;
+      setChatMessages(prev => [...prev, { role: 'ai', text: ai }]);
+    } catch {
+      setChatMessages(prev => [...prev, { role: 'ai', text: 'Ocurrió un problema procesando tu consulta. Intenta de nuevo.' }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (chatEndRef.current) chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
+
   return (
-    <div className="profile-container">
+    <div style={{ position:'relative', minHeight:'calc(100vh - 80px)' }}>
+      <div style={{
+        position:'absolute',
+        inset:0,
+        background:"url('/docs/FondoPortalUSS.jpg'), url('/FondoPortalUSS.jpg')",
+        backgroundPosition:'center',
+        backgroundSize:'cover',
+        backgroundRepeat:'no-repeat',
+        backgroundAttachment:'fixed',
+        opacity:1,
+        zIndex:0
+      }} />
+      <div style={{
+        position:'absolute',
+        inset:0,
+        background:'rgba(255,255,255,0.25)',
+        backdropFilter:'blur(0.5px)',
+        zIndex:1
+      }} />
+    <div className="profile-container" style={{ position:'relative', zIndex:2 }}>
       <div className="profile-wrapper">
         
         <div className="profile-header">
@@ -768,6 +821,52 @@ const Profile: React.FC = () => {
           )}
         </form>
       </div>
+
+      {/* Toggle lateral del chat (sin mover layout del perfil) */}
+      <button
+        className={`chat-slide-toggle ${chatOpen ? 'open' : ''}`}
+        onClick={() => setChatOpen(o => !o)}
+        aria-label={chatOpen ? 'Ocultar asistencia IA' : 'Mostrar asistencia IA'}
+      >
+        {chatOpen ? <ChevronRight className="w-8 h-8" /> : <ChevronLeft className="w-8 h-8" />}
+      </button>
+
+      <div className={`chat-side-wrapper ${chatOpen ? 'visible' : ''}`} aria-hidden={!chatOpen}>
+        <div className="chat-side-inner">
+          <div className="chat-side-header">
+            <div className="chat-side-title">
+              <span className="chat-side-badge">AI</span>
+              <h3>Asistencia IA USS</h3>
+            </div>
+          </div>
+          <div className="chat-side-messages" role="log">
+            {chatMessages.map((m, i) => (
+              <div key={i} className={`cs-msg ${m.role}`}>
+                <div className="cs-bubble">{m.text}</div>
+              </div>
+            ))}
+            <div ref={chatEndRef} />
+          </div>
+          <form onSubmit={sendChatMessage} className="chat-side-input-row">
+            <input
+              type="text"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Escribe tu consulta..."
+              className="chat-side-input"
+              disabled={chatLoading}
+            />
+            <button
+              type="submit"
+              disabled={chatLoading || !chatInput.trim()}
+              className="chat-side-send"
+            >
+              {chatLoading ? '...' : 'Enviar'}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
     </div>
   );
 };

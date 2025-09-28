@@ -76,15 +76,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onExpandChange }) => {
       title: 'Crear Planificación',
       icon: <PlusCircle className="sidebar-icon" />,
       subItems: [
+        { title: 'Planificación con Asistente IA', path: '/planificacion/asistente-ia' },
         { title: 'Nueva planificación', path: '/planificacion/nueva' },
+        { title: 'Verificación con IA', path: '/planificacion/verificacion' },
         { title: 'Mis planificaciones', path: '/planificacion/mis-planificaciones' }
       ]
     },
     {
-      id: 'chatbot',
-      title: 'Chatbot',
+      id: 'asistenteIA',
+      title: 'Asistente IA',
       icon: <MessageCircle className="sidebar-icon" />,
-      path: '/chatbot',
+      path: '/chatbot', // Ajustado: la ruta real en App.tsx es /chatbot
       subItems: []
     },
     {
@@ -107,25 +109,28 @@ const Sidebar: React.FC<SidebarProps> = ({ onExpandChange }) => {
           <Menu />
         </button>
         
-        <div className="sidebar-logo">
-          <div className="sidebar-logo-icon">
-            <div style={{ 
-              width: '70px', 
-              height: '70px', 
-              background: '#1e3a8a', 
-              borderRadius: '50%', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              color: 'white', 
-              fontWeight: 'bold', 
-              fontSize: '24px' 
-            }}>USS</div>
+        <button
+          className="sidebar-logo"
+          onClick={() => navigate('/bienvenida')}
+          title="Ir a Bienvenida"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+        >
+          <div className="sidebar-logo-icon" style={{ position: 'relative' }}>
+            <img
+              src="https://mi.uss.cl/_next/static/media/logoUSSWithLabel.fc3b9027.svg"
+              alt="Logo USS"
+              style={{
+                width: '100%',
+                height: 'auto',
+                objectFit: 'contain',
+                display: 'block'
+              }}
+            />
           </div>
           <div className="sidebar-logo-text">
             <h1>Portal Docente</h1>
           </div>
-        </div>
+        </button>
       </div>
 
       <nav className="sidebar-nav">

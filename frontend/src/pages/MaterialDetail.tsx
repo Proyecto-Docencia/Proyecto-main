@@ -33,6 +33,8 @@ const MaterialDetail: React.FC = () => {
   const [rate, setRate] = useState(1);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [pdfAvailable, setPdfAvailable] = useState<boolean | null>(null);
+  const [showVideo, setShowVideo] = useState(false);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -109,8 +111,26 @@ const MaterialDetail: React.FC = () => {
     controllerRef.current?.seekToSeconds(seconds);
   };
 
-  // Asegurar URLs robustas frente a acentos y espacios
-  const pdfUrl = material.pdf ? encodeURI(material.pdf) : undefined;
+  // Asegurar URLs robustas frente a acentos y espacios (si ya vienen encoded evitamos doble codificación)
+  const pdfUrl = material.pdf ? (/[%]/.test(material.pdf) ? material.pdf : encodeURI(material.pdf)) : undefined;
+  const rawVideo = material.video;
+  const videoUrl = rawVideo ? (/[%]/.test(rawVideo) ? rawVideo : encodeURI(rawVideo)) : undefined;
+  const isMp4 = !!videoUrl && /\.mp4($|\?)/i.test(videoUrl);
+
+  // Verificar disponibilidad real del PDF (HEAD) para evitar iframe vacío
+  useEffect(() => {
+    let aborted = false;
+    (async () => {
+      if (!pdfUrl) { setPdfAvailable(false); return; }
+      try {
+        const res = await fetch(pdfUrl, { method: 'HEAD' });
+        if (!aborted) setPdfAvailable(res.ok && res.headers.get('content-type')?.includes('pdf') ? true : true); // si el servidor no da tipo igual intentamos
+      } catch {
+        if (!aborted) setPdfAvailable(false);
+      }
+    })();
+    return () => { aborted = true; };
+  }, [pdfUrl]);
 
   return (
     <div className="materials-container">
@@ -230,26 +250,81 @@ const MaterialDetail: React.FC = () => {
                     </span>
                   </div>
                 )}
-                {pdfUrl && (
-                  <>
-                    <a href={pdfUrl} className="btn-expanded secondary" target="_blank" rel="noopener noreferrer">
-                      Abrir PDF en pestaña nueva
-                    </a>
-                    <a href={pdfUrl} download className="btn-expanded secondary">
+                {/* Toggle PDF / Video siempre visible (si hay video). Uno activo (azul), otro inactivo (gris). */}
+                <div style={{ display:'flex', gap:'.5rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowVideo(false)}
+                    className={`btn-expanded ${!showVideo ? 'primary' : 'secondary'}`}
+                    aria-pressed={!showVideo}
+                  >
+                    Ver PDF
+                  </button>
+                  {material.video && (
+                    <button
+                      type="button"
+                      onClick={() => setShowVideo(true)}
+                      className={`btn-expanded ${showVideo ? 'primary' : 'secondary'}`}
+                      aria-pressed={showVideo}
+                    >
+                      Ver video
+                    </button>
+                  )}
+                  {/* Botón de descarga del PDF (sólo si existe url) */}
+                  {pdfUrl && (
+                    <a href={pdfUrl} download className="btn-expanded secondary" style={{ whiteSpace:'nowrap' }}>
                       <FileDown className="w-4 h-4" /> Descargar PDF
                     </a>
-                  </>
-                )}
+                  )}
+                </div>
               </div>
-
-              {pdfUrl ? (
-                <div className="pdf-viewer">
-                  <embed src={`${pdfUrl}#toolbar=1&navpanes=0`} type="application/pdf" className="pdf-iframe" />
-                </div>
+              {showVideo ? (
+                videoUrl ? (
+                  <div style={{ marginTop: '1rem', borderRadius: 8, overflow: 'hidden', background: '#000' }}>
+                    {isMp4 ? (
+                      <video
+                        src={videoUrl}
+                        style={{ width: '100%', maxHeight: 560, display: 'block', background: '#000' }}
+                        controls
+                        controlsList="nodownload"
+                      >
+                        Tu navegador no soporta la reproducción de video.
+                      </video>
+                    ) : (
+                      <iframe
+                        src={videoUrl}
+                        title={material.title}
+                        style={{ width: '100%', height: '520px', border: 'none', display: 'block' }}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <div className="expanded-body" style={{ padding: '1rem' }}>
+                    <p style={{ color: '#64748b', margin: 0 }}>Este material no tiene video asociado.</p>
+                  </div>
+                )
               ) : (
-                <div className="expanded-body">
-                  <p>No hay PDF disponible para este material.</p>
-                </div>
+                <>
+                  {pdfUrl && pdfAvailable !== false && (
+                    <div className="pdf-viewer">
+                      <embed
+                        src={`${pdfUrl}#toolbar=1&navpanes=0`}
+                        type="application/pdf"
+                        className="pdf-iframe"
+                        onError={() => setPdfAvailable(false)}
+                      />
+                    </div>
+                  )}
+                  {(!pdfUrl || pdfAvailable === false) && (
+                    <div className="expanded-body" style={{ padding: '1rem' }}>
+                      <p style={{ color: '#64748b', margin: 0 }}>
+                        {pdfUrl ? 'El PDF no pudo cargarse (posible nombre con acento o no encontrado).' : 'No hay PDF disponible para este material.'}
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>

@@ -23,7 +23,8 @@
 /* Layout principal del perfil */
 .profile-container {
   min-height: calc(100vh - 80px);
-  background: var(--gradient-background);
+  /* Transparenta para dejar ver FondoPortalUSS (overlay independiente controla legibilidad) */
+  background: transparent;
   padding: 2rem;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
