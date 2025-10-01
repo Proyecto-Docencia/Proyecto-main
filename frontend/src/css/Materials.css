@@ -4,6 +4,12 @@
 :root {
   --primary-color: var(--color-primary); /* Azul Institucional */
   --primary-hover: var(--color-primary-hover);
+  /* Chat panel sizing used to shift page content when open */
+  --chat-side-width: 560px;
+  --chat-side-padding: 24px;
+  /* Estimate of left sidebar width (fallback). Increase to typical expanded sidebar width so
+    the layout calculation reserves the right amount of space when chat is open. */
+  --left-sidebar-width: 240px;
   --secondary-color: #64748b;
   --accent-color: var(--color-accent);
   --success-color: #16a34a;
@@ -30,8 +36,11 @@
 }
 
 .materials-wrapper {
-  max-width: 1400px;
+  /* Slightly narrower container gives better central composition */
+  max-width: 1200px;
   margin: 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
 /* Header de Materials */
@@ -119,9 +128,12 @@
 /* Grid de materiales */
 .materials-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  /* Use a slightly larger min width so cards keep good proportions and whitespace */
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+  align-items: start;
+  justify-content: center; /* center columns when fewer fit */
 }
 
 /* Tarjetas de material */
@@ -133,6 +145,10 @@
   transition: var(--transition);
   border: 1px solid var(--border-color);
   position: relative;
+  /* keep all cards same height in a row and allow content to push actions down */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .material-card:hover {
@@ -141,7 +157,7 @@
 }
 
 .material-thumbnail {
-  height: 200px;
+  height: 180px;
   background: var(--gradient-background);
   display: flex;
   align-items: center;
@@ -161,7 +177,10 @@
 }
 
 .material-content {
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
 }
 
 .material-title {
@@ -174,17 +193,18 @@
 
 .material-description {
   color: var(--secondary-color);
-  font-size: 0.875rem;
+  font-size: 0.92rem;
   line-height: 1.5;
   margin-bottom: 1rem;
+  min-height: 3.2rem; /* keep cards visually balanced */
 }
 
 .material-meta {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.78rem;
   color: var(--secondary-color);
 }
 
@@ -206,7 +226,37 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-top: auto; /* push actions to the bottom of the card */
+}
+
+/* Button tweak for a cleaner compact action area */
+.btn-small.primary {
+  padding: 0.5rem 0.9rem;
+  font-size: 0.9rem;
+}
+
+/* Slightly increase spacing for larger viewports */
+@media (min-width: 1400px) {
+  .materials-wrapper { max-width: 1400px; }
+  .materials-grid { gap: 2rem; }
+  .material-thumbnail { height: 210px; }
+}
+
+@media (max-width: 1024px) {
+  .materials-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .materials-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .material-thumbnail { height: 160px; }
+  .materials-container { padding: 1rem; }
+}
+
+/* When chat is open, reduce the wrapper's available max-width so cards retain proportion
+   and stay centered in the remaining viewport area. The calculation prevents the grid
+   from collapsing to a single narrow column unnecessarily. */
+.with-chat-open .materials-wrapper {
+  max-width: min(1200px, calc(100% - var(--chat-side-width) - var(--chat-side-padding) - 48px));
 }
 
 /* Contenedor de iconos no clickeables */
@@ -452,7 +502,8 @@
   right: 0;
   height: 100vh;
   /* Ancho del panel (ajustado nuevamente). Puedes cambiar solo este valor y el padding usará la variable. */
-  --chat-side-width: 560px; /* ancho reducido un poco más */
+  --chat-side-width: 480px; /* ancho por defecto más contenido y menos intrusivo */
+  --chat-side-padding: 16px;
   width: var(--chat-side-width);
   max-width: 90vw;
   transform: translateX(100%);
@@ -579,6 +630,38 @@
   .chat-slide-toggle { top: auto; bottom: 20px; transform: none; right: 12px; border-radius: 8px; }
   .chat-side-wrapper { width: 100%; max-width: 100%; }
   .chat-side-inner { border-left: none; }
+}
+
+/* When chat is open, shift main content to keep it visible and centered */
+.with-chat-open .profile-container,
+.with-chat-open .materials-container {
+  /* Add right padding equal to the chat width so children reflow and stay visible. We avoid
+     applying padding to the centered wrapper itself to prevent double-shrinking. */
+  padding-right: calc(var(--chat-side-width) + var(--chat-side-padding));
+  transition: padding-right .35s cubic-bezier(.4,.1,.2,1);
+}
+
+/* Alternative: smaller screens should let chat overlay content (no shift) */
+@media (max-width: 900px) {
+  .with-chat-open .profile-container,
+  .with-chat-open .materials-wrapper,
+  .with-chat-open .materials-container {
+    padding-right: 0 !important;
+  }
+}
+
+/* When chat is open on larger screens, allow the materials wrapper to expand
+   to the remaining viewport width (between left sidebar and chat), and align
+   the wrapper closer to the left so cards use available whitespace. */
+@media (min-width: 901px) {
+  /* Keep the wrapper centered but limit its max width so it doesn't collapse when
+     the chat reserves right-side space. This avoids a large left offset and lets
+     the grid display multiple columns within the available area. */
+  .with-chat-open .materials-wrapper {
+    margin: 0 auto;
+    width: auto;
+    max-width: min(1200px, calc(100% - var(--chat-side-width) - 48px));
+  }
 }
 
 /* Antiguos estilos de chat (FAB) quedan sin uso tras rediseño */
@@ -1113,6 +1196,31 @@
   .material-actions {
     flex-direction: column;
   }
+
+/* Final layout overrides to ensure consistent proportions and whitespace */
+.materials-wrapper {
+  /* keep a pleasant central column that isn't too wide when many columns fit */
+  max-width: 1200px;
+}
+
+.materials-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2rem;
+}
+
+.material-card { box-shadow: var(--shadow); }
+
+@media (min-width: 1200px) {
+  .materials-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 1000px) {
+  .materials-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .materials-grid { grid-template-columns: 1fr; gap: 1rem; }
+}
   
   .btn-expanded {
     justify-content: center;

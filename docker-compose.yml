@@ -32,21 +32,6 @@ services:
       - db_data:/var/lib/mysql
     restart: unless-stopped
 
-  new_api:
-    container_name: new_api
-    build: ./new_api
-    ports:
-      - "8082:8000" # Changed port to avoid conflicts
-    environment:
-      - DJANGO_DEBUG=1
-      - DB_HOST=db
-      - DB_NAME=new_api_db
-      - DB_USER=root
-      - DB_PASSWORD=rootpass
-    depends_on:
-      - db
-    restart: unless-stopped
-
   chroma_api:
     container_name: chroma_api
     build: ./chromadb
@@ -57,3 +42,7 @@ services:
       - CHROMA_COLLECTION=docs_embeddings
       - TOP_K=5
     volumes:
+      - ./chromadb/data:/app/data
+
+volumes:
+  db_data:

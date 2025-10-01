@@ -45,12 +45,11 @@ const Materials: React.FC = () => {
     setChatMessages(prev => [...prev, { role: 'user', text: userMessage }]);
 
     try {
-      // Simular respuesta de IA
-      await new Promise(resolve => setTimeout(resolve, 900));
-      
-      const aiResponse = `He recibido tu consulta sobre "${userMessage}". Como asistente educativo de USS, puedo ayudarte con información sobre materiales, metodologías de enseñanza y recursos académicos. ¿Hay algo específico sobre los materiales que te interese explorar?`;
-      
-      setChatMessages(prev => [...prev, { role: 'ai', text: aiResponse }]);
+        // Llamar al backend que consulta DeepSeek y retorna respuesta_ia
+        const api = await import('../utils/api');
+        const resp = await api.crearChat(userMessage);
+        const aiResponse = resp?.respuesta_ia || 'La IA no devolvió respuesta.';
+        setChatMessages(prev => [...prev, { role: 'ai', text: aiResponse }]);
     } catch (error) {
       setChatMessages(prev => [...prev, { 
         role: 'ai', 
@@ -67,8 +66,21 @@ const Materials: React.FC = () => {
     }
   }, [chatMessages]);
 
+  // Keep CSS variable --chat-side-width in sync with actual chat element width
+  useEffect(() => {
+    const setChatWidthVar = () => {
+      const el = document.querySelector('.chat-side-wrapper') as HTMLElement | null;
+      if (el) {
+        document.documentElement.style.setProperty('--chat-side-width', `${el.offsetWidth}px`);
+      }
+    };
+    setChatWidthVar();
+    window.addEventListener('resize', setChatWidthVar);
+    return () => window.removeEventListener('resize', setChatWidthVar);
+  }, [chatOpen]);
+
   return (
-    <div style={{
+    <div className={chatOpen ? 'with-chat-open' : ''} style={{
       position: 'relative',
       minHeight: 'calc(100vh - 80px)'
     }}>

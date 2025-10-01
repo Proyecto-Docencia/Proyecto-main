@@ -1,3 +1,14 @@
+---
+title: "IA_DOCENTE"
+emoji: "🤖"
+colorFrom: "indigo"
+colorTo: "blue"
+sdk: gradio
+sdk_version: "3.0"
+app_file: app.py
+pinned: false
+---
+
 IA_DOCENTE - Deploy para Hugging Face Spaces
 
 Este repositorio contiene una app Gradio mínima (`app.py`) que actúa como cliente/proxy hacia un servicio RAG alojado en Hugging Face Spaces (por ejemplo, DeepSeek-1.5B + ChromaDB).
@@ -19,7 +30,7 @@ Preparar y subir a Hugging Face Spaces (pasos resumidos):
 
 3) Copia los archivos de `IA_DOCENTE/` al repositorio clonado del Space, o usa los scripts incluidos:
 
-   - PowerShell (Windows): ejecuta `IA_DOCENTE\deploy_to_hf.ps1` y sigue las instrucciones.
+   - PowerShell (Windows): ejecuta `IA_DOCENTE\\deploy_to_hf.ps1` y sigue las instrucciones.
    - Bash (Linux/macOS): `./IA_DOCENTE/deploy_to_hf.sh <usuario/space>`
 
 4) En el directorio del Space (si copias manualmente):
@@ -34,9 +45,17 @@ Configuración y uso
 - También puedes definir la variable de entorno `RAG_ENDPOINT` en el entorno local antes del deploy si quieres otro valor por defecto.
 
 Notas técnicas
-- Esta app asume que el Space RAG responde al endpoint `/run/predict` con un JSON tipo `{"data": ["...respuesta..."]}`. Si tu Space responde en otro formato, ajusta `query_rag` en `app.py`.
-- No incluyas tokens secretos en el código. El push al Space debe realizarse con un token local (no versionado).
+ 
+ Exposed endpoints
+ -----------------
+ 
+ - The Gradio app exposes a prediction endpoint at `/run/predict` which accepts POST JSON of the shape `{"data": ["<question>"]}` and returns JSON `{"data": ["<answer>"]}`.
+ 
+ Quick local test
+ ----------------
+ 
+ 1. Install requirements: `pip install -r requirements.txt`
+ 2. Run the app: `python app.py` (it will start on port 7860 by default)
+ 3. Test the predict endpoint: `python test_predict.py` (or POST directly to `http://localhost:7860/run/predict`)
 
 Si quieres, puedo:
-- Ajustar `app.py` para autenticar llamadas al Space si tu Space requiere token en headers.
-- Añadir ejemplos y tests simples.

@@ -483,10 +483,12 @@ const Profile: React.FC = () => {
     setChatLoading(true);
     setChatMessages(prev => [...prev, { role: 'user', text: content }]);
     try {
-      await new Promise(r => setTimeout(r, 800));
-      const ai = `Recibí tu mensaje: "${content}". Puedo ayudarte a actualizar datos, comprender facultades o carreras. ¿Deseas modificar algo específico de tu perfil?`;
-      setChatMessages(prev => [...prev, { role: 'ai', text: ai }]);
-    } catch {
+      // Call backend API which now queries DeepSeek and saves the chat
+      const resp = await (await import('../utils/api')).crearChat(content);
+      const iaText = resp?.respuesta_ia || 'La IA no devolvió respuesta.';
+      setChatMessages(prev => [...prev, { role: 'ai', text: iaText }]);
+    } catch (err) {
+      console.error('Error al llamar al backend de chat', err);
       setChatMessages(prev => [...prev, { role: 'ai', text: 'Ocurrió un problema procesando tu consulta. Intenta de nuevo.' }]);
     } finally {
       setChatLoading(false);
@@ -497,8 +499,21 @@ const Profile: React.FC = () => {
     if (chatEndRef.current) chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
+  // Sync CSS var with actual chat element width so layout math uses correct size
+  useEffect(() => {
+    const setChatWidthVar = () => {
+      const el = document.querySelector('.chat-side-wrapper') as HTMLElement | null;
+      if (el) {
+        document.documentElement.style.setProperty('--chat-side-width', `${el.offsetWidth}px`);
+      }
+    };
+    setChatWidthVar();
+    window.addEventListener('resize', setChatWidthVar);
+    return () => window.removeEventListener('resize', setChatWidthVar);
+  }, [chatOpen]);
+
   return (
-    <div style={{ position:'relative', minHeight:'calc(100vh - 80px)' }}>
+    <div className={chatOpen ? 'with-chat-open' : ''} style={{ position:'relative', minHeight:'calc(100vh - 80px)' }}>
       <div style={{
         position:'absolute',
         inset:0,

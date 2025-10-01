@@ -17,6 +17,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'auth_app',
     'plans_app',
+    'chat_app',
 ]
 
 MIDDLEWARE = [
@@ -63,6 +64,17 @@ DATABASES = {
         }
     }
 }
+
+# When running tests locally, prefer an in-memory SQLite DB to avoid requiring the
+# external MySQL service (useful for developer machines and CI where DB isn't available).
+import sys
+if 'test' in sys.argv or os.environ.get('DJANGO_TEST') == '1':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': ':memory:',
+        }
+    }
 
 LANGUAGE_CODE = 'es-es'
 TIME_ZONE = 'UTC'

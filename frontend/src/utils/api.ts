@@ -66,3 +66,27 @@ export async function saveProfile(data: any) {
   if (!resp.ok) throw new Error('No se pudo guardar el perfil');
   return resp.json();
 }
+
+/* Chat API helpers */
+export async function crearChat(mensaje: string) {
+  const resp = await fetch('http://localhost:8081/api/chat/crear/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ mensaje_usuario: mensaje }),
+  });
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error('Error al crear chat: ' + text);
+  }
+  return resp.json();
+}
+
+export async function fetchMisChats() {
+  const resp = await fetch('http://localhost:8081/api/chat/mis/', {
+    method: 'GET',
+    credentials: 'include',
+  });
+  if (!resp.ok) throw new Error('No se pudo cargar los chats');
+  return resp.json();
+}
