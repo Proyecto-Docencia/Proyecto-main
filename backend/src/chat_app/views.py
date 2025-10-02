@@ -4,9 +4,10 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpRequest
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 from .models import Chat
-# ¡Importamos la función del servicio de IA que acabamos de crear!
-from .ai_service import consultar_deepseek 
+# Importamos la función del servicio de IA (Gemini)
+from .ai_service import consultar_gemini 
 
 
 @login_required
@@ -26,6 +27,7 @@ def mis_chats(request: HttpRequest):
     return JsonResponse({"results": data}, status=200)
 
 
+@csrf_exempt
 @login_required
 @require_http_methods(["POST"])
 def crear_chat(request: HttpRequest):
@@ -42,8 +44,8 @@ def crear_chat(request: HttpRequest):
     # PASO CLAVE: CONSULTAR A LA IA LOCAL ANTES DE GUARDAR
     # ==========================================================
     
-    # 1. Obtenemos la respuesta del modelo DeepSeek
-    respuesta_modelo = consultar_deepseek(mensaje)
+    # 1. Obtenemos la respuesta del modelo Gemini
+    respuesta_modelo = consultar_gemini(mensaje)
     
     # 2. Creamos el objeto Chat, incluyendo la respuesta de la IA
     chat = Chat.objects.create(

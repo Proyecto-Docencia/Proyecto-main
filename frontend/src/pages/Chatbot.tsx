@@ -1,12 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { Send } from 'lucide-react';
-
-type ChatMessage = {
-  id: string;
-  type: 'user' | 'ai';
-  message: string;
-  time: string;
-};
+import { useChat } from '../hooks/useChat';
 
 function nowTime() {
   const d = new Date();
@@ -17,54 +11,17 @@ function nowTime() {
 }
 
 const Chatbot: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  const { messages, input, setInput, sendMessage, loading, chatEndRef } = useChat([
     {
-      id: 'm1',
-      type: 'ai',
-      message:
-        'Te sugiero usar analogías culinarias: dividir una pizza, repartir dulces, etc. También puedes crear un juego donde los estudiantes representen fracciones con objetos físicos. ¿Te gustaría que genere algunos ejercicios específicos?',
-      time: nowTime(),
+      role: 'ai',
+      text: 'Te sugiero usar analogías culinarias: dividir una pizza, repartir dulces, etc. También puedes crear un juego donde los estudiantes representen fracciones con objetos físicos. ¿Te gustaría que genere algunos ejercicios específicos?',
     },
   ]);
-  const [input, setInput] = useState('');
-  const [status, setStatus] = useState<'online' | 'thinking'>('online');
-  const endRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length]);
-
-  const send = async () => {
-    const text = input.trim();
-    if (!text) return;
-    const userMsg: ChatMessage = {
-      id: crypto.randomUUID(),
-      type: 'user',
-      message: text,
-      time: nowTime(),
-    };
-    setMessages((m) => [...m, userMsg]);
-    setInput('');
-    setStatus('thinking');
-
-    // Simulación de respuesta (placeholder). Aquí luego conectamos al backend.
-    setTimeout(() => {
-      const aiMsg: ChatMessage = {
-        id: crypto.randomUUID(),
-        type: 'ai',
-        message:
-          'Buena pregunta. Puedo proponerte una mini-secuencia didáctica con objetivo, actividades y evaluación. ¿Quieres enfoque lúdico o más guiado?',
-        time: nowTime(),
-      };
-      setMessages((m) => [...m, aiMsg]);
-      setStatus('online');
-    }, 600);
-  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      send();
+      sendMessage();
     }
   };
 
@@ -94,10 +51,10 @@ const Chatbot: React.FC = () => {
           <div className="flex flex-col">
             <div className="font-semibold text-slate-900">Asistente Educativo IA</div>
             <div className="text-xs text-slate-500">
-              {status === 'online' ? (
-                <span className="text-green-600">En línea</span>
-              ) : (
+              {loading ? (
                 <span className="text-blue-600">Pensando…</span>
+              ) : (
+                <span className="text-green-600">En línea</span>
               )}
               <span> • Listo para ayudarte</span>
             </div>
@@ -106,21 +63,21 @@ const Chatbot: React.FC = () => {
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50">
-          {messages.map((m) => (
-            <div key={m.id} className={`w-full flex ${m.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+          {messages.map((m, i) => (
+            <div key={i} className={`w-full flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div
                 className={
-                  m.type === 'user'
+                  m.role === 'user'
                     ? 'max-w-[78%] bg-blue-600 text-white rounded-2xl px-4 py-3 shadow-sm'
                     : 'max-w-[78%] bg-white text-slate-800 rounded-2xl px-4 py-3 shadow-sm border border-slate-200'
                 }
               >
-                <div className="whitespace-pre-wrap leading-relaxed">{m.message}</div>
-                <div className={`text-[11px] mt-1 ${m.type === 'user' ? 'text-blue-100' : 'text-slate-400'}`}>{m.time}</div>
+                <div className="whitespace-pre-wrap leading-relaxed">{m.text}</div>
+                <div className={`text-[11px] mt-1 ${m.role === 'user' ? 'text-blue-100' : 'text-slate-400'}`}>{nowTime()}</div>
               </div>
             </div>
           ))}
-          <div ref={endRef} />
+          <div ref={chatEndRef} />
         </div>
 
         {/* Input */}
@@ -132,9 +89,10 @@ const Chatbot: React.FC = () => {
               onKeyDown={handleKeyDown}
               placeholder="Pregunta sobre metodologías, contenido, evaluaciones…"
               className="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white"
+              disabled={loading}
             />
             <button
-              onClick={send}
+              onClick={() => sendMessage()}
               className="px-4 py-3 rounded-lg text-white font-medium flex items-center gap-2 shadow-sm"
               style={{
                 background: 'linear-gradient(135deg,#2563eb,#4f46e5)',
@@ -144,6 +102,7 @@ const Chatbot: React.FC = () => {
               onMouseUp={(e) => (e.currentTarget.style.filter = '')}
               onMouseLeave={(e) => (e.currentTarget.style.filter = '')}
               aria-label="Enviar"
+              disabled={loading || !input.trim()}
             >
               <Send className="w-4 h-4" />
               <span>Enviar</span>

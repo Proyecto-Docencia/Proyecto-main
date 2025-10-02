@@ -511,7 +511,7 @@
   z-index: 65;
   pointer-events: none;
 }
-.chat-side-wrapper.visible { transform: translateX(0); pointer-events: auto; }
+.chat-side-wrapper.open { transform: translateX(0); pointer-events: auto; }
 
 .chat-side-inner {
   height: 100%;

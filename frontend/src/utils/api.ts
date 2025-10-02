@@ -47,6 +47,20 @@ export async function deletePlanificacion(id: number) {
   return resp.json();
 }
 
+export async function crearChat(mensaje_usuario: string) {
+  const resp = await fetch('http://localhost:8081/api/chat/crear/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ mensaje_usuario }),
+  });
+  if (!resp.ok) {
+    const errorData = await resp.json().catch(() => ({}));
+    throw new Error(errorData.error || 'No se pudo enviar el mensaje');
+  }
+  return resp.json();
+}
+
 export async function fetchProfile() {
   const resp = await fetch('http://localhost:8081/api/auth/profile/', {
     method: 'GET',
@@ -64,21 +78,6 @@ export async function saveProfile(data: any) {
     body: JSON.stringify(data),
   });
   if (!resp.ok) throw new Error('No se pudo guardar el perfil');
-  return resp.json();
-}
-
-/* Chat API helpers */
-export async function crearChat(mensaje: string) {
-  const resp = await fetch('http://localhost:8081/api/chat/crear/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({ mensaje_usuario: mensaje }),
-  });
-  if (!resp.ok) {
-    const text = await resp.text();
-    throw new Error('Error al crear chat: ' + text);
-  }
   return resp.json();
 }
 

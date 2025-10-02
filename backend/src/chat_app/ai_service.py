@@ -1,38 +1,55 @@
 # chat_app/ai_service.py
+import os
+from google import genai
+from google.genai import types
 
-from openai import OpenAI
-import os # Importamos 'os' por si queremos usar variables de entorno en el futuro
+API_KEY = os.environ.get("GEMINI_API_KEY")
+# La API key se toma de la variable de entorno GEMINI_API_KEY
+# Si no existe, evitamos inicializar el cliente para no fallar en tests o dev sin clave.
+client = genai.Client() if os.environ.get("GEMINI_API_KEY") else None
 
-# Configuración del servidor Ollama (¡No cambiar estos valores si usas Ollama por defecto!)
-OLLAMA_BASE_URL = "http://localhost:11434/v1"
-MODEL_DEEPSEEK = "deepseek-1.5b" # Asegúrate de que este nombre coincida con tu modelo de Ollama
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash")
+# Si quieres desactivar "thinking" por costo/latencia, usa 0 (recomendado para respuestas rápidas)
+THINKING_BUDGET = int(os.environ.get("GEMINI_THINKING_BUDGET", "0"))
 
-# Inicializar el cliente (esto se hace una sola vez)
-client = OpenAI(
-    api_key="ollama", # Clave de relleno
-    base_url=OLLAMA_BASE_URL 
-)
-
-def consultar_deepseek(prompt_usuario: str) -> str:
+def consultar_gemini(prompt_usuario: str) -> str:
     """
-    Llama al modelo DeepSeek a través del servidor Ollama.
+    Llama al modelo Gemini con un prompt estructurado.
+    """
+    print(f"--- DEBUG: Recibido en backend: '{prompt_usuario}' ---") # LOG DE DEBUG
+
+    if not prompt_usuario.strip():
+        return "Por favor ingresa un mensaje."
+    if client is None:
+        return "La IA (Gemini) no está configurada. Define GEMINI_API_KEY para habilitarla."
+
+    # Prompt estructurado para guiar al modelo
+    prompt_estructurado = f"""
+    Eres un asistente virtual para docentes de la Universidad San Sebastián.
+    Tu rol es ser amable, servicial y responder preguntas sobre material educativo, planificaciones de clases y temas académicos.
+    Mantén tus respuestas concisas y directas.
+
+    Pregunta del docente: "{prompt_usuario}"
     
-    Asegúrate de que el modelo esté corriendo con 'ollama run deepseek-1.5b' en una terminal.
+    Respuesta:
     """
+
     try:
-        response = client.chat.completions.create(
-            model=MODEL_DEEPSEEK,
-            messages=[
-                {"role": "user", "content": prompt_usuario}
-            ],
-            temperature=0.4, # Baja temperatura para respuestas más lógicas
-            max_tokens=500 # Limita la longitud para evitar respuestas excesivas
+        # Configuración correcta según la nueva documentación
+        cfg = types.GenerateContentConfig(
+            thinking_config=types.ThinkingConfig(thinking_budget=THINKING_BUDGET)
+        )
+
+        # Llamada correcta: client.models.generate_content y parámetro 'config'
+        resp = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=[prompt_estructurado],
+            config=cfg,
         )
         
-        # Retorna el contenido de la respuesta (string)
-        return response.choices[0].message.content.strip()
-        
+        text = getattr(resp, "text", "") or ""
+        print(f"--- DEBUG: Respuesta generada por IA: '{text.strip()}' ---") # LOG DE DEBUG
+        return text.strip() or "La IA no devolvió contenido."
     except Exception as e:
-        print(f"ERROR LLM: Falló la conexión con la API de DeepSeek. Detalle: {e}")
-        # Retorna un mensaje de error claro en caso de fallo
-        return "Disculpa, el servicio de IA local (Ollama) no está disponible o el modelo no está cargado."
+        print(f"--- ERROR en Gemini: {e} ---") # LOG DE ERROR
+        return f"Error al contactar con la IA: {e}"

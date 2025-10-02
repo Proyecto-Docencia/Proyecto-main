@@ -99,69 +99,46 @@ const Login = () => {
           <p>Bienvenido al portal docente USS</p>
         </div>
         <div className="login-form-container">
-          <form className="login-form" onSubmit={handleSubmit}>
-            <h2>Iniciar Sesión</h2>
-            
-            {errors.general && (
-              <div className="error-message general-error">{errors.general}</div>
-            )}
-            
+          <h2>Iniciar Sesión</h2>
+          <form onSubmit={handleSubmit} noValidate>
             <div className="input-group">
               <label htmlFor="email">Correo Electrónico</label>
-              <input 
-                type="email" 
-                id="email" 
+              <input
+                type="email"
+                id="email"
                 name="email"
-                placeholder="nombre.apellido@docente.uss.cl" 
-                value={formData.email} 
+                value={formData.email}
                 onChange={handleInputChange}
+                placeholder="nombre.apellido@docente.uss.cl"
                 className={errors.email ? 'error' : ''}
-                required 
+                required
               />
-              <small className="help-text">Debe ser un correo @docente.uss.cl</small>
-              {errors.email && <div className="error-message">{errors.email}</div>}
+              {errors.email && <p className="error-message">{errors.email}</p>}
+              {!errors.email && <p className="help-text">Debe ser un correo @docente.uss.cl</p>}
             </div>
-            
             <div className="input-group">
               <label htmlFor="password">Contraseña</label>
-              <input 
-                type="password" 
-                id="password" 
+              <input
+                type="password"
+                id="password"
                 name="password"
-                placeholder="••••••••" 
                 value={formData.password}
                 onChange={handleInputChange}
+                placeholder="Contraseña"
                 className={errors.password ? 'error' : ''}
-                required 
+                required
               />
-              {errors.password && <div className="error-message">{errors.password}</div>}
+              {errors.password && <p className="error-message">{errors.password}</p>}
             </div>
-            
-            <button 
-              type="submit" 
-              className={`btn-login ${isLoading ? 'loading' : ''}`}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Iniciando sesión...' : 'Ingresar'}
-            </button>
-            
+            {errors.general && <p className="error-message general-error">{errors.general}</p>}
             <div className="form-links">
-              <div className="links-container">
-                <button 
-                  type="button"
-                  onClick={() => navigate('/olvide-contrasena')} 
-                  className="btn-secondary btn-secondary-equal"
-                >
-                  Recuperar contraseña
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => navigate('/registro')} 
-                  className="btn-secondary btn-secondary-equal"
-                >
-                  Registrarse
-                </button>
-              </div>
+              <a href="/olvide-contrasena" className="btn-link">¿Olvidaste tu contraseña?</a>
+            </div>
+            <button type="submit" className={`btn-login ${isLoading ? 'loading' : ''}`} disabled={isLoading}>
+              {isLoading ? 'Iniciando...' : 'Iniciar Sesión'}
+            </button>
+            <div className="register-link" style={{textAlign: 'center', marginTop: '16px'}}>
+              <p>¿No tienes una cuenta? <a href="/registro" className="btn-link">Regístrate aquí</a></p>
             </div>
           </form>
         </div>

@@ -17,6 +17,9 @@ services:
       - DB_NAME=proyecto
       - DB_USER=root
       - DB_PASSWORD=rootpass
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=gemini-2.5-flash
+      - GEMINI_THINKING_BUDGET=0
     depends_on:
       - db
     restart: unless-stopped
@@ -31,18 +34,6 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped
-
-  chroma_api:
-    container_name: chroma_api
-    build: ./chromadb
-    ports:
-      - "8083:8001"
-    environment:
-      - CHROMA_DIR=/app/data
-      - CHROMA_COLLECTION=docs_embeddings
-      - TOP_K=5
-    volumes:
-      - ./chromadb/data:/app/data
 
 volumes:
   db_data:

@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import '../css/Profile.css';
 import { loadAssistedDraft, saveAssistedDraft } from '../utils/planningStorage';
+import { useChat } from '../hooks/useChat';
 
 // Página de asistencia IA para generar un borrador de planificación basado en capítulos
 const PlanificacionAsistenteIA: React.FC = () => {
@@ -18,21 +19,21 @@ const PlanificacionAsistenteIA: React.FC = () => {
   const [activities, setActivities] = useState('');
   const [resources, setResources] = useState('');
   const [evaluation, setEvaluation] = useState('');
-  const [chapterFocus, setChapterFocus] = useState('Capítulo 1');
-  const [loadingSuggestion, setLoadingSuggestion] = useState(false);
-  const [suggestion, setSuggestion] = useState('Selecciona un capítulo y presiona "Generar sugerencia".');
-  // Chat estilo Chatbot
-  interface MiniMsg { id: string; type: 'user' | 'ai'; message: string; time: string; }
-  const [chatInput, setChatInput] = useState('');
-  const [status, setStatus] = useState<'online' | 'thinking'>('online');
-  const [chatMessages, setChatMessages] = useState<MiniMsg[]>([{
-    id: crypto.randomUUID(),
-    type: 'ai',
-    message: 'Hola, soy el asistente. Pide ajustes o más detalle sobre objetivos, actividades o evaluación.',
-    time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-  }]);
-  const chatEndRef = useRef<HTMLDivElement | null>(null);
-  useEffect(()=>{ chatEndRef.current?.scrollIntoView({behavior:'smooth'}); }, [chatMessages.length]);
+
+  // Usar el hook de chat centralizado
+  const {
+    messages: chatMessages,
+    input: chatInput,
+    loading: chatLoading,
+    setInput: setChatInput,
+    sendMessage,
+    chatEndRef,
+  } = useChat([
+    {
+      role: 'ai',
+      text: 'Hola, soy el asistente. Pide ajustes o más detalle sobre objetivos, actividades o evaluación para tu planificación.',
+    },
+  ]);
 
   // Cargar borrador previo si existe
   useEffect(() => {
@@ -48,28 +49,9 @@ const PlanificacionAsistenteIA: React.FC = () => {
     }
   }, [email]);
 
-  const generateSuggestion = async () => {
-    setLoadingSuggestion(true);
-    // Simulación de IA: variar texto según capítulo
-    await new Promise(r => setTimeout(r, 900));
-    const base = chapterFocus.toLowerCase();
-    const sug = `Sugerencia IA para ${chapterFocus}:\n` +
-      `Objetivos: Enfatizar competencias clave del ${base}, promover pensamiento crítico y participación activa.\n` +
-      `Actividades: 1) Activación de saberes previos con preguntas generadas por IA. 2) Trabajo colaborativo guiado. 3) Reflexión final asistida por IA.\n` +
-      `Recursos: Extractos del ${chapterFocus}, pizarra digital, herramienta IA generativa.\n` +
-      `Evaluación: Lista de cotejo + retroalimentación formativa automatizada.`;
-    setSuggestion(sug);
-    // Podríamos pre-rellenar ciertos campos si están vacíos
-    if (!objectives) setObjectives('Desarrollar competencias vinculadas a ' + chapterFocus + '.');
-    if (!activities) setActivities('Inicio: dinámica breve.\nDesarrollo: trabajo guiado por IA.\nCierre: reflexión y metacognición.');
-    if (!resources) setResources('Texto del capítulo, herramienta IA, proyector.');
-    if (!evaluation) setEvaluation('Rúbrica analítica + retroalimentación IA.');
-    setLoadingSuggestion(false);
-  };
-
   const handleGeneratePlanning = () => {
     saveAssistedDraft(email, {
-      title: title || `Plan basado en ${chapterFocus}`,
+      title: title || `Planificación Asistida`,
       subject,
       grade,
       objectives,
@@ -78,26 +60,6 @@ const PlanificacionAsistenteIA: React.FC = () => {
       evaluation,
     });
     navigate('/planificacion/nueva');
-  };
-
-  const sendChat = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const prompt = chatInput.trim();
-    if (!prompt || status==='thinking') return;
-    const userMsg: MiniMsg = { id: crypto.randomUUID(), type:'user', message: prompt, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) };
-    setChatMessages(m => [...m, userMsg]);
-    setChatInput('');
-    setStatus('thinking');
-    await new Promise(r => setTimeout(r, 850));
-    let reply = '';
-    if (/objetiv/i.test(prompt)) reply = 'Añade un objetivo que destaque pensamiento crítico y colaboración mediada por IA.';
-    else if (/activ/i.test(prompt)) reply = 'Estructura actividades: 1) activación, 2) exploración guiada con IA, 3) metacognición.';
-    else if (/evalu/i.test(prompt)) reply = 'Incorpora rúbrica con criterios: participación, calidad del producto y reflexión individual.';
-    else if (/recurso/i.test(prompt)) reply = 'Considera recursos: extractos capítulo, herramienta IA, rúbrica compartida, foro asíncrono.';
-    else reply = 'Puedo sugerir mejoras en objetivos, actividades, evaluación o recursos. Pregunta algo específico.';
-    const aiMsg: MiniMsg = { id: crypto.randomUUID(), type:'ai', message: reply, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) };
-    setChatMessages(m => [...m, aiMsg]);
-    setStatus('online');
   };
 
   return (
@@ -117,20 +79,7 @@ const PlanificacionAsistenteIA: React.FC = () => {
         <div className="profile-content-grid">
           <section className="profile-section">
             <div className="profile-section-header">
-              <h2 className="profile-section-title">Configuración base</h2>
-              <div style={{display:'flex', gap:'8px'}}>
-                <select className="profile-input" value={chapterFocus} onChange={e => setChapterFocus(e.target.value)} style={{maxWidth:220}}>
-                  <option>Capítulo 1</option>
-                  <option>Capítulo 2</option>
-                  <option>Capítulo 3</option>
-                  <option>Capítulo 4</option>
-                  <option>Capítulo 5</option>
-                  <option>Capítulo 6</option>
-                </select>
-                <button className="profile-edit-btn" disabled={loadingSuggestion} onClick={generateSuggestion}>
-                  {loadingSuggestion ? 'Generando...' : 'Generar sugerencia'}
-                </button>
-              </div>
+              <h2 className="profile-section-title">Borrador de Planificación</h2>
             </div>
             <div className="profile-fields">
               <div className="profile-field">
@@ -170,76 +119,71 @@ const PlanificacionAsistenteIA: React.FC = () => {
 
           <section className="profile-section">
             <div className="profile-section-header">
-              <h2 className="profile-section-title">Sugerencias IA</h2>
+              <h2 className="profile-section-title">Ajustes con IA</h2>
             </div>
             <div className="profile-fields">
-              <div className="profile-value" style={{display:'block', whiteSpace:'pre-wrap', minHeight:160}}>
-                {suggestion}
-              </div>
-              <p style={{fontSize:12, color:'#64748b', margin:0}}>Estas sugerencias son simuladas localmente (no se está llamando a un backend de IA real).</p>
-              <div className="profile-field" style={{marginTop:'16px'}}>
-                <label className="profile-label">Chat con el asistente</label>
-                <div style={{
-                  border:'1px solid #e2e8f0',
-                  borderRadius:12,
-                  background:'#f8fafc',
-                  display:'flex',
-                  flexDirection:'column',
-                  height:280
-                }}>
-                  <div style={{flex:1, overflowY:'auto', padding:'12px', display:'flex', flexDirection:'column', gap:'12px', background:'#f1f5f9'}}>
-                    {chatMessages.map(m => (
-                      <div key={m.id} style={{display:'flex', justifyContent: m.type==='user'?'flex-end':'flex-start'}}>
-                        <div style={{
-                          maxWidth:'78%',
-                          background: m.type==='user' ? '#2563eb' : '#ffffff',
-                          color: m.type==='user' ? '#fff' : '#1e293b',
-                          padding:'10px 14px',
-                          borderRadius: m.type==='user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
-                          fontSize:14,
-                          lineHeight:1.5,
-                          position:'relative',
-                          boxShadow: m.type==='user' ? '0 2px 4px rgba(37,99,235,0.35)' : '0 1px 3px rgba(0,0,0,0.08)',
-                          border: m.type==='user' ? 'none' : '1px solid #e2e8f0'
-                        }}>
-                          <div style={{whiteSpace:'pre-wrap'}}>{m.message}</div>
-                          <div style={{fontSize:10, marginTop:4, textAlign:'right', opacity:.7}}>{m.time}</div>
-                        </div>
+                  <p style={{fontSize:12, color:'#64748b', margin:0}}>Interactúa con la IA para refinar los campos de tu planificación.</p>
+                  <div className="profile-field" style={{marginTop:'16px'}}>
+                    <label className="profile-label">Chat con el asistente</label>
+                    <div style={{
+                      border:'1px solid #e2e8f0',
+                      borderRadius:12,
+                      background:'#f8fafc',
+                      display:'flex',
+                      flexDirection:'column',
+                      height:400
+                    }}>
+                      <div style={{flex:1, overflowY:'auto', padding:'12px', display:'flex', flexDirection:'column', gap:'12px', background:'#f1f5f9'}}>
+                        {chatMessages.map((m, index) => (
+                          <div key={index} style={{display:'flex', justifyContent: m.role ==='user'?'flex-end':'flex-start'}}>
+                            <div style={{
+                              maxWidth:'78%',
+                              background: m.role ==='user' ? '#2563eb' : '#ffffff',
+                              color: m.role ==='user' ? '#fff' : '#1e293b',
+                              padding:'10px 14px',
+                              borderRadius: m.role ==='user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
+                              fontSize:14,
+                              lineHeight:1.5,
+                              position:'relative',
+                              boxShadow: m.role ==='user' ? '0 2px 4px rgba(37,99,235,0.35)' : '0 1px 3px rgba(0,0,0,0.08)',
+                              border: m.role ==='user' ? 'none' : '1px solid #e2e8f0'
+                            }}>
+                              <div style={{whiteSpace:'pre-wrap'}}>{m.text}</div>
+                            </div>
+                          </div>
+                        ))}
+                        <div ref={chatEndRef} />
                       </div>
-                    ))}
-                    <div ref={chatEndRef} />
+                      <form onSubmit={sendMessage} style={{display:'flex', gap:'8px', padding:'10px', borderTop:'1px solid #e2e8f0', background:'#fff'}}>
+                        <input
+                          className="profile-input"
+                          style={{flex:1, background:'#fff'}}
+                          placeholder={chatLoading ? 'La IA está pensando...' : 'Pregunta o solicita un ajuste...'}
+                          value={chatInput}
+                          onChange={e=>setChatInput(e.target.value)}
+                          disabled={chatLoading}
+                        />
+                        <button
+                          type="submit"
+                          className="profile-edit-btn"
+                          disabled={chatLoading || !chatInput.trim()}
+                          style={{
+                            background: 'linear-gradient(135deg,#2563eb,#4f46e5)',
+                            color:'#fff',
+                            border:'none'
+                          }}
+                        >
+                          {chatLoading ? '...' : 'Enviar'}
+                        </button>
+                      </form>
+                    </div>
                   </div>
-                  <form onSubmit={sendChat} style={{display:'flex', gap:'8px', padding:'10px', borderTop:'1px solid #e2e8f0', background:'#fff'}}>
-                    <input
-                      className="profile-input"
-                      style={{flex:1, background:'#fff'}}
-                      placeholder={status==='thinking' ? 'La IA está pensando...' : 'Pregunta o solicita un ajuste...'}
-                      value={chatInput}
-                      onChange={e=>setChatInput(e.target.value)}
-                      disabled={status==='thinking'}
-                    />
-                    <button
-                      type="submit"
-                      className="profile-edit-btn"
-                      disabled={status==='thinking' || !chatInput.trim()}
-                      style={{
-                        background: 'linear-gradient(135deg,#2563eb,#4f46e5)',
-                        color:'#fff',
-                        border:'none'
-                      }}
-                    >
-                      {status==='thinking' ? '...' : 'Enviar'}
-                    </button>
-                  </form>
                 </div>
-                <p style={{fontSize:11, color:'#64748b', marginTop:6}}>El chat es una simulación local.</p>
-              </div>
+              </section>
             </div>
-          </section>
+          </div>
         </div>
-      </div>
-    </div>
-  );
-};
+      );
+    };
 
 export default PlanificacionAsistenteIA;

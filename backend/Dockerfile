@@ -11,6 +11,8 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY src ./src
 COPY entrypoint.sh /entrypoint.sh
+# Convertir fines de línea de CRLF (Windows) a LF (Unix)
+RUN sed -i 's/\r$//' /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 WORKDIR /app/src
 EXPOSE 8000
