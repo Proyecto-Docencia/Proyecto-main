@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getMaterialById } from '../data/materials';
 import '../css/Materials.css';
-import { FileDown, Volume2, ArrowLeft, Pause, Play, Square } from 'lucide-react';
+import { FileDown, Volume2, ArrowLeft, Pause, Play, Square, Headphones } from 'lucide-react';
 import { prepareSpeechFromPdf, SpeechController } from '../utils/pdfAudio';
 
 const MaterialDetail: React.FC = () => {
@@ -34,7 +34,8 @@ const MaterialDetail: React.FC = () => {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null);
   const [pdfAvailable, setPdfAvailable] = useState<boolean | null>(null);
-  const [showVideo, setShowVideo] = useState(false);
+  // vistaActual: 'pdf' | 'video' | 'podcast'
+  const [viewMode, setViewMode] = useState<'pdf' | 'video' | 'podcast'>('pdf');
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -115,7 +116,10 @@ const MaterialDetail: React.FC = () => {
   const pdfUrl = material.pdf ? (/[%]/.test(material.pdf) ? material.pdf : encodeURI(material.pdf)) : undefined;
   const rawVideo = material.video;
   const videoUrl = rawVideo ? (/[%]/.test(rawVideo) ? rawVideo : encodeURI(rawVideo)) : undefined;
+  const rawPodcast = (material as any).podcast as string | undefined;
+  const podcastUrl = rawPodcast ? (/[%]/.test(rawPodcast) ? rawPodcast : encodeURI(rawPodcast)) : undefined;
   const isMp4 = !!videoUrl && /\.mp4($|\?)/i.test(videoUrl);
+  const isPodcastMp4 = !!podcastUrl && /\.mp4($|\?)/i.test(podcastUrl);
 
   // Verificar disponibilidad real del PDF (HEAD) para evitar iframe vacío
   useEffect(() => {
@@ -251,26 +255,29 @@ const MaterialDetail: React.FC = () => {
                   </div>
                 )}
                 {/* Toggle PDF / Video siempre visible (si hay video). Uno activo (azul), otro inactivo (gris). */}
-                <div style={{ display:'flex', gap:'.5rem' }}>
+                <div style={{ display:'flex', gap:'.5rem', flexWrap:'wrap' }}>
                   <button
                     type="button"
-                    onClick={() => setShowVideo(false)}
-                    className={`btn-expanded ${!showVideo ? 'primary' : 'secondary'}`}
-                    aria-pressed={!showVideo}
-                  >
-                    Ver PDF
-                  </button>
+                    onClick={() => setViewMode('pdf')}
+                    className={`btn-expanded ${viewMode === 'pdf' ? 'primary' : 'secondary'}`}
+                    aria-pressed={viewMode === 'pdf'}
+                  >Ver PDF</button>
                   {material.video && (
                     <button
                       type="button"
-                      onClick={() => setShowVideo(true)}
-                      className={`btn-expanded ${showVideo ? 'primary' : 'secondary'}`}
-                      aria-pressed={showVideo}
-                    >
-                      Ver video
-                    </button>
+                      onClick={() => setViewMode('video')}
+                      className={`btn-expanded ${viewMode === 'video' ? 'primary' : 'secondary'}`}
+                      aria-pressed={viewMode === 'video'}
+                    >Ver video</button>
                   )}
-                  {/* Botón de descarga del PDF (sólo si existe url) */}
+                  {podcastUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('podcast')}
+                      className={`btn-expanded ${viewMode === 'podcast' ? 'primary' : 'secondary'}`}
+                      aria-pressed={viewMode === 'podcast'}
+                    ><Headphones className="w-4 h-4" style={{marginRight:4}} /> Escuchar Podcast</button>
+                  )}
                   {pdfUrl && (
                     <a href={pdfUrl} download className="btn-expanded secondary" style={{ whiteSpace:'nowrap' }}>
                       <FileDown className="w-4 h-4" /> Descargar PDF
@@ -278,7 +285,7 @@ const MaterialDetail: React.FC = () => {
                   )}
                 </div>
               </div>
-              {showVideo ? (
+              {viewMode === 'video' ? (
                 videoUrl ? (
                   <div style={{ marginTop: '1rem', borderRadius: 8, overflow: 'hidden', background: '#000' }}>
                     {isMp4 ? (
@@ -303,6 +310,24 @@ const MaterialDetail: React.FC = () => {
                 ) : (
                   <div className="expanded-body" style={{ padding: '1rem' }}>
                     <p style={{ color: '#64748b', margin: 0 }}>Este material no tiene video asociado.</p>
+                  </div>
+                )
+              ) : viewMode === 'podcast' ? (
+                podcastUrl ? (
+                  <div style={{ marginTop: '1rem', borderRadius: 8, overflow: 'hidden', background: '#0f172a', padding:'1rem' }}>
+                    {isPodcastMp4 ? (
+                      <audio
+                        src={podcastUrl}
+                        style={{ width: '100%' }}
+                        controls
+                      >Tu navegador no soporta audio HTML5.</audio>
+                    ) : (
+                      <p style={{ color:'#64748b', margin:0 }}>Formato de podcast no reconocido.</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="expanded-body" style={{ padding: '1rem' }}>
+                    <p style={{ color: '#64748b', margin: 0 }}>Este material no tiene podcast.</p>
                   </div>
                 )
               ) : (

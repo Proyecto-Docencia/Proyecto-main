@@ -9,18 +9,30 @@ export interface Material {
   date: string;
   video?: string;
   pdf?: string;
+  podcast?: string; // Nuevo: ruta a archivo mp4 (podcast) específico del capítulo
   concepts: string[];
   recommendedUse: string;
 }
 
 // Enlaces de video y PDF por material
 const videoLinks: Record<number, string> = {
-  1: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-  2: 'https://www.youtube.com/embed/YZzB1Uca7n0',
-  3: 'https://www.youtube.com/watch?v=d6GiN04gviQ', 
-  4: 'https://www.youtube.com/watch?v=w1a6HLa2IdY', 
-  5: 'https://www.youtube.com/watch?v=ndZeu0ZVRzI', 
-  6: 'https://youtu.be/LejZzqt-vdc', 
+  1: '/docs/Videos/video-inicio-(Creatividad-Cap1).mp4', // Video local en /public/docs
+  2: '',
+  3: '/docs/Videos/alfabetizacin-digital-Cap3.mp4', // Video local en /public/docs
+  4: '/docs/Videos/pensamiento-crtico-Cap4.mp4', // Video local en /public/docs
+  5: '/docs/Videos/Tiempo-autónomo-CAP5.mp4', // Video local en /public/docs
+  6: '/docs/Videos/colaboracion-Cap6.mp4', // Video local en /public/docs
+};
+
+// Enlaces a podcasts (archivos mp4 con audio – “Podcast de cada capitulo”)
+// Se codifican espacios y acentos para robustez en servidores estáticos.
+const podcastLinks: Record<number, string> = {
+  1: '/docs/Podcast%20de%20cada%20capitulo/Creatividad_Cap1.mp4',
+  2: '/docs/Podcast%20de%20cada%20capitulo/Marco_educativo_para_integrar_la_IAGen_en_la_docencia_universit_CAP2.mp4',
+  3: '/docs/Podcast%20de%20cada%20capitulo/Alfabetizaci%C3%B3n_en_IAGen%20Cap%203.mp4',
+  4: '/docs/Podcast%20de%20cada%20capitulo/Pensamiento_Cr%C3%ADtico__Cap4.mp4',
+  5: '/docs/Podcast%20de%20cada%20capitulo/Aut%C3%B3nomo__Cap5.mp4',
+  6: '/docs/Podcast%20de%20cada%20capitulo/Colaboraci%C3%B3n_(Trabajo%20colaborativo)Cap6.mp4',
 };
 
 const pdfLinks: Record<number, string> = {
@@ -37,7 +49,7 @@ const pdfLinks: Record<number, string> = {
 export const materials: Material[] = [
   {
     id: 1,
-    title: 'Capítulo 1 - Trabajo Colaborativo',
+    title: 'Capítulo 1 - Creatividad',
     description:
       'Guía para diseñar experiencias colaborativas en el aula integrando IA generativa como miembro activo del equipo.',
     type: 'CAPÍTULO',
@@ -47,6 +59,7 @@ export const materials: Material[] = [
     date: 'Hace 3 días',
     video: videoLinks[1],
     pdf: pdfLinks[1],
+    podcast: podcastLinks[1],
     concepts: [
       'Roles colaborativos de la IA',
       'Ciclo de integración en el aula',
@@ -69,6 +82,7 @@ export const materials: Material[] = [
     date: 'Hace 1 semana',
     video: videoLinks[2],
     pdf: pdfLinks[2],
+    podcast: podcastLinks[2],
     concepts: [
       'Diagnóstico inicial de habilidades',
       'Planificación didáctica con IA',
@@ -91,6 +105,7 @@ export const materials: Material[] = [
     date: 'Hace 5 días',
     video: videoLinks[3],
     pdf: pdfLinks[3],
+    podcast: podcastLinks[3],
     concepts: [
       'Alfabetización digital en IAGen',
       'Uso ético y crítico de IA',
@@ -113,6 +128,7 @@ export const materials: Material[] = [
     date: 'Hace 6 días',
     video: videoLinks[4],
     pdf: pdfLinks[4],
+    podcast: podcastLinks[4],
     concepts: ['Reacciones químicas', 'Simulación interactiva'],
     recommendedUse: 'Laboratorio virtual, prácticas de química',
   },
@@ -128,6 +144,7 @@ export const materials: Material[] = [
     date: 'Hace 3 días',
     video: videoLinks[5],
     pdf: pdfLinks[5],
+    podcast: podcastLinks[5],
     concepts: ['Revolución Industrial', 'Línea de tiempo', 'Mapas interactivos'],
     recommendedUse: 'Clases de historia, recursos multimedia',
   },
@@ -143,6 +160,7 @@ export const materials: Material[] = [
     date: 'Hace 2 días',
     video: videoLinks[6],
     pdf: pdfLinks[6],
+    podcast: podcastLinks[6],
     concepts: [
       'Rúbricas asistidas por IA',
       'Retroalimentación formativa',
