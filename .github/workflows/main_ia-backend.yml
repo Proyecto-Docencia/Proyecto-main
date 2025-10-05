@@ -12,11 +12,13 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Se eliminó 'defaults.run.working-directory: backend' para usar rutas explícitas.
 
     steps:
-      - name: Checkout code
+      - name: Checkout code to specific directory
         uses: actions/checkout@v4
+        with:
+          # CLAVE: Clonamos el repo en la carpeta 'app-source'
+          path: app-source 
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -26,31 +28,28 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # Ruta explícita: 'backend/requirements.txt'
-          pip install -r backend/requirements.txt 
-
+          # Usamos el nuevo path: 'app-source/backend/requirements.txt'
+          pip install -r app-source/backend/requirements.txt 
+          
       - name: Run migrations
         run: |
-          # Ruta explícita: 'backend/manage.py'
-          python backend/manage.py migrate --noinput 
+          # Usamos el nuevo path: 'app-source/backend/manage.py'
+          python app-source/backend/manage.py migrate --noinput 
 
       - name: Collect static files
         run: |
-          # Ruta explícita: 'backend/manage.py'
-          python backend/manage.py collectstatic --noinput 
+          # Usamos el nuevo path: 'app-source/backend/manage.py'
+          python app-source/backend/manage.py collectstatic --noinput 
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          # CRÍTICO: Subir solo el contenido de la carpeta 'backend'
-          # Esto asegura que manage.py esté en la raíz del paquete de despliegue.
-          path: backend/
-          # Excluir el entorno virtual si se crea en la raíz
-          # path: |
-          #   backend/
-          #   !venv/ 
-
+          # CRÍTICO: Subir solo la carpeta de la aplicación desde el nuevo path
+          path: app-source/backend/
+          
+  # ---
+  
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -64,8 +63,9 @@ jobs:
         with:
           name: python-app
           path: . 
-          # Esto descarga el contenido de 'backend/' a la raíz de este job.
-
+          
+      # ... (Pasos de Azure Login y Deploy) ...
+      
       - name: Log in to Azure
         uses: azure/login@v2
         with:
@@ -79,5 +79,4 @@ jobs:
         with:
           app-name: "ia-backend"
           slot-name: "Production"
-          package: . 
-          # Despliega el contenido de la carpeta, donde Azure espera encontrar tu app.
+          package: .
