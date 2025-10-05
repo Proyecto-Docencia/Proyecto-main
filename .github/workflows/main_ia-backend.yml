@@ -29,26 +29,25 @@ jobs:
           pip install -r requirements.txt 
         working-directory: backend 
 
-      # --- 2. Run Migrations (Fixes ModuleNotFoundError) ---
+      # --- 2. Run Migrations (Usa la carpeta 'src' como base) ---
       - name: Run migrations
+        # Directorio de trabajo en 'backend/src/' para que Python encuentre módulos directos.
         run: |
-          # CLAVE: Agrega la carpeta 'backend/' (representada por '.') al PYTHONPATH.
-          PYTHONPATH=$PYTHONPATH:. DJANGO_SETTINGS_MODULE=src.config.settings django-admin migrate --noinput
-        working-directory: backend
+          PYTHONPATH=$PYTHONPATH:. DJANGO_SETTINGS_MODULE=config.settings django-admin migrate --noinput
+        working-directory: backend/src 
 
-      # --- 3. Collect Static Files (Fixes ModuleNotFoundError) ---
+      # --- 3. Collect Static Files ---
       - name: Collect static files
         run: |
-          PYTHONPATH=$PYTHONPATH:. DJANGO_SETTINGS_MODULE=src.config.settings django-admin collectstatic --noinput
-        working-directory: backend
+          PYTHONPATH=$PYTHONPATH:. DJANGO_SETTINGS_MODULE=config.settings django-admin collectstatic --noinput
+        working-directory: backend/src 
 
-      # --- 4. Upload Artifact (Fixes YAML Syntax Error) ---
+      # --- 4. Upload Artifact ---
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          # CLAVE: Usa comillas simples en el path para evitar errores de sintaxis YAML.
-          # Esto apunta a la carpeta 'backend' dentro del workspace.
+          # Usa la ruta absoluta garantizada por GitHub.
           path: '${{ github.workspace }}/backend/' 
           
 ---
@@ -70,6 +69,7 @@ jobs:
       - name: Log in to Azure
         uses: azure/login@v2
         with:
+          # Se asegura el uso correcto de las variables de secretos.
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
