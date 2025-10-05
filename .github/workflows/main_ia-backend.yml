@@ -16,46 +16,43 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4 
-        # Clona el repositorio en la raíz del runner, sin anidaciones manuales.
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      # 1. Instalación de dependencias
+      # --- 1. Install Dependencies ---
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt 
         working-directory: backend 
-        # Ejecutado desde 'backend/' para encontrar requirements.txt.
 
-      # 2. Ejecución de Migraciones (Solución al ModuleNotFoundError)
+      # --- 2. Run Migrations (Fixes ModuleNotFoundError) ---
       - name: Run migrations
-        # CLAVE: Usa PYTHONPATH=. para que Python encuentre el paquete 'src/' 
-        # dentro de 'backend/' y pueda importar 'src.config.settings'.
         run: |
+          # CLAVE: Agrega la carpeta 'backend/' (representada por '.') al PYTHONPATH.
           PYTHONPATH=$PYTHONPATH:. DJANGO_SETTINGS_MODULE=src.config.settings django-admin migrate --noinput
         working-directory: backend
 
-      # 3. Recolección de Estáticos (Solución al ModuleNotFoundError)
+      # --- 3. Collect Static Files (Fixes ModuleNotFoundError) ---
       - name: Collect static files
         run: |
           PYTHONPATH=$PYTHONPATH:. DJANGO_SETTINGS_MODULE=src.config.settings django-admin collectstatic --noinput
         working-directory: backend
 
-      # 4. Subida de Artefacto (Solución al problema de ruta duplicada)
+      # --- 4. Upload Artifact (Fixes YAML Syntax Error) ---
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          # Usa la variable de entorno absoluta del runner para apuntar a la carpeta 'backend/'
-          # Esto garantiza que el contenido se suba correctamente para el despliegue.
-          path: ${{ github.workspace }}/backend/
+          # CLAVE: Usa comillas simples en el path para evitar errores de sintaxis YAML.
+          # Esto apunta a la carpeta 'backend' dentro del workspace.
+          path: '${{ github.workspace }}/backend/' 
           
-  ---
-  
+---
+
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -69,7 +66,6 @@ jobs:
         with:
           name: python-app
           path: . 
-          # Descarga el contenido de 'backend/' a la raíz de este job.
 
       - name: Log in to Azure
         uses: azure/login@v2
@@ -84,5 +80,4 @@ jobs:
         with:
           app-name: "ia-backend"
           slot-name: "Production"
-          package: . 
-          # Despliega el contenido descargado del artefacto.
+          package: .
