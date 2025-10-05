@@ -16,57 +16,60 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4 
+        # Clona el repositorio en la raíz del runner, sin anidaciones manuales.
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      # --- Instalación de dependencias ---
-
+      # 1. Instalación de dependencias
       - name: Install dependencies
-        # Entra en 'backend' para encontrar requirements.txt.
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt 
         working-directory: backend 
+        # Ejecutado desde 'backend/' para encontrar requirements.txt.
 
-      # --- Ejecución de Comandos de Django (CORREGIDO) ---
-
+      # 2. Ejecución de Migraciones (Solución al ModuleNotFoundError)
       - name: Run migrations
-        # CLAVE: Usa DJANGO_SETTINGS_MODULE y django-admin.
-        # Asumiendo que tu archivo de configuración está en backend/src/config/settings.py
+        # CLAVE: Usa PYTHONPATH=. para que Python encuentre el paquete 'src/' 
+        # dentro de 'backend/' y pueda importar 'src.config.settings'.
         run: |
-          DJANGO_SETTINGS_MODULE=src.config.settings django-admin migrate --noinput
+          PYTHONPATH=$PYTHONPATH:. DJANGO_SETTINGS_MODULE=src.config.settings django-admin migrate --noinput
         working-directory: backend
 
+      # 3. Recolección de Estáticos (Solución al ModuleNotFoundError)
       - name: Collect static files
-        # CLAVE: Usa DJANGO_SETTINGS_MODULE y django-admin.
         run: |
-          DJANGO_SETTINGS_MODULE=src.config.settings django-admin collectstatic --noinput
+          PYTHONPATH=$PYTHONPATH:. DJANGO_SETTINGS_MODULE=src.config.settings django-admin collectstatic --noinput
         working-directory: backend
 
-      # --- Subida de Artefacto ---
-
+      # 4. Subida de Artefacto (Solución al problema de ruta duplicada)
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          # Usar la ruta absoluta al backend es lo más seguro.
+          # Usa la variable de entorno absoluta del runner para apuntar a la carpeta 'backend/'
+          # Esto garantiza que el contenido se suba correctamente para el despliegue.
           path: ${{ github.workspace }}/backend/
           
-  # ---
+  ---
   
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    # ... (El job deploy no necesita cambios ya que el artefacto es el mismo)
+    environment:
+      name: "Production"
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: python-app
           path: . 
+          # Descarga el contenido de 'backend/' a la raíz de este job.
 
       - name: Log in to Azure
         uses: azure/login@v2
@@ -81,4 +84,5 @@ jobs:
         with:
           app-name: "ia-backend"
           slot-name: "Production"
-          package: .
+          package: . 
+          # Despliega el contenido descargado del artefacto.
