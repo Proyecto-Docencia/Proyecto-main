@@ -1,70 +1,76 @@
-name: Build and deploy Python app to Azure Web App - ia-backend
+name: Build and deploy Django app to Azure Web App - ia-backend
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
     defaults:
       run:
-        working-directory: backend   # 👈 clave: todos los comandos corren dentro de /backend
+        working-directory: backend
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set up Python version
-        uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
-
-      - name: Create and start virtual environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
+          python-version: "3.10"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      # (opcional) Correr tests aquí
+      - name: Run migrations
+        run: |
+          python manage.py migrate --noinput
+
+      - name: Collect static files
+        run: |
+          python manage.py collectstatic --noinput
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
           path: |
-            backend/
-            !backend/venv/
+            .
+            !venv/
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      id-token: write
-      contents: read
+    environment:
+      name: "Production"
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: python-app
-      
-      - name: Login to Azure
+          path: .
+
+      - name: Log in to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_CD6B0D2217224B7F9FDFC337B0B51005 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_49159EE2545641B69FF09321C717CBD0 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CF23291D6FD94B9893657FB93ACCFCA3 }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy to Azure Web App
+        id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'ia-backend'
-          slot-name: 'Production'
-          package: backend  # 👈 despliega la carpeta correcta
+          app-name: "ia-backend"
+          slot-name: "Production"
+          package: .
