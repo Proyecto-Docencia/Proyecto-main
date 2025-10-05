@@ -14,11 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code to specific directory
-        uses: actions/checkout@v4
-        with:
-          # CLAVE: Clonamos el repo en la carpeta 'app-source'
-          path: app-source 
+      - name: Checkout code
+        # Checkout en la raíz (Proyecto-main/Proyecto-main/)
+        uses: actions/checkout@v4 
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -26,28 +24,31 @@ jobs:
           python-version: "3.10"
 
       - name: Install dependencies
+        # CLAVE: Ejecutamos el comando *dentro* de la carpeta 'backend'
         run: |
           python -m pip install --upgrade pip
-          # Usamos el nuevo path: 'app-source/backend/requirements.txt'
-          pip install -r app-source/backend/requirements.txt 
-          
+          pip install -r requirements.txt 
+        working-directory: backend # <--- ¡Nuevo uso de working-directory!
+
       - name: Run migrations
         run: |
-          # Usamos el nuevo path: 'app-source/backend/manage.py'
-          python app-source/backend/manage.py migrate --noinput 
+          # Ahora solo se necesita 'manage.py' ya que estamos en 'backend/'
+          python manage.py migrate --noinput
+        working-directory: backend
 
       - name: Collect static files
         run: |
-          # Usamos el nuevo path: 'app-source/backend/manage.py'
-          python app-source/backend/manage.py collectstatic --noinput 
+          python manage.py collectstatic --noinput
+        working-directory: backend
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          # CRÍTICO: Subir solo la carpeta de la aplicación desde el nuevo path
-          path: app-source/backend/
-          
+          # Subimos la carpeta 'backend/' completa.
+          # Nota: Esta ruta es relativa a la raíz del repositorio, no al working-directory.
+          path: backend/ 
+
   # ---
   
   deploy:
@@ -63,9 +64,7 @@ jobs:
         with:
           name: python-app
           path: . 
-          
-      # ... (Pasos de Azure Login y Deploy) ...
-      
+
       - name: Log in to Azure
         uses: azure/login@v2
         with:
