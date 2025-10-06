@@ -54,7 +54,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Intento real contra backend
     let backendWorked = false;
     try {
-      const resp = await fetch('http://localhost:8081/api/auth/login/', {
+  const base = (import.meta.env.VITE_API_BASE_URL || (window as any).__API_BASE__ || '').replace(/\/$/, '');
+  const loginUrl = `${base}/api/v1/auth/login/`;
+  const profileUrl = `${base}/api/v1/auth/profile/`;
+  const resp = await fetch(loginUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -62,7 +65,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       if (resp.ok) {
         // Cargar perfil desde backend
-        const pResp = await fetch('http://localhost:8081/api/auth/profile/', {
+  const pResp = await fetch(profileUrl, {
           method: 'GET',
           credentials: 'include',
         });
@@ -111,7 +114,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = useCallback(() => {
     // Cerrar sesión en backend y limpiar cache local
-    fetch('http://localhost:8081/api/auth/logout/', { method: 'POST', credentials: 'include' }).catch(() => {});
+  const base = (import.meta.env.VITE_API_BASE_URL || (window as any).__API_BASE__ || '').replace(/\/$/, '');
+  fetch(`${base}/api/v1/auth/logout/`, { method: 'POST', credentials: 'include' }).catch(() => {});
     setUser(null);
     localStorage.removeItem('authUser');
     localStorage.removeItem('userEmail');

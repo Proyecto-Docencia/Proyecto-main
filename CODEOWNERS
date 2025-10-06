@@ -1,0 +1,6 @@
+# Example ownership (adjust to real GitHub usernames or teams)
+/frontend/ @frontend-team
+/backend/ @backend-team
+/infra/ @devops-team
+/docker-compose.yml @devops-team
+/README.md @backend-team

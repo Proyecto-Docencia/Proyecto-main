@@ -1,0 +1,67 @@
+# Azure DevOps pipeline to build the Vite React frontend and deploy to Azure Static Web Apps
+# Notes:
+# - Add a pipeline secret variable named AZURE_STATIC_WEB_APPS_DEPLOYMENT_TOKEN with your deployment token.
+# - Create the pipeline in Azure DevOps and point it to this file.
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  name: 'Default'
+  demands:
+    - Agent.Name -equals agentepipe
+
+variables:
+  NODE_VERSION: '18.x'
+
+stages:
+  - stage: Build_and_Deploy
+    displayName: 'Build and Deploy Frontend'
+    jobs:
+      - job: Build
+        displayName: 'Build and Deploy Frontend Job'
+        steps:
+          - checkout: self
+            clean: true
+
+          - task: NodeTool@0
+            displayName: 'Install Node.js'
+            inputs:
+              versionSpec: '$(NODE_VERSION)'
+
+          - task: Cache@2
+            displayName: 'Cache npm (node_modules and npm cache)'
+            inputs:
+              key: 'npm | "$(Agent.OS)" | frontend/package-lock.json'
+              restoreKeys: |
+                npm | "$(Agent.OS)"
+              path: |
+                frontend/node_modules
+                ~/.npm
+
+          - script: |
+              echo "Using Node version:" && node --version
+              cd frontend
+              npm ci --no-audit --no-fund
+            displayName: 'Install npm dependencies (frontend)'
+
+          - script: |
+              cd frontend
+              npm run build
+            displayName: 'Build frontend (Vite)'
+
+          - task: AzureStaticWebApp@0
+            displayName: 'Deploy to Azure Static Web App'
+            inputs:
+              app_location: 'frontend'
+              api_location: ''
+              output_location: 'frontend/dist'
+              skip_app_build: true
+              deployment_token: $(AZURE_STATIC_WEB_APPS_DEPLOYMENT_TOKEN)

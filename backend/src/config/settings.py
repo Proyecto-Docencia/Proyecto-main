@@ -5,7 +5,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-secret-key")
 DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
-ALLOWED_HOSTS = ["*"]
+
+# Hosts permitidos (coma separada). Ej: "miapp.azurewebsites.net,api.midominio.com"
+_raw_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "*")
+ALLOWED_HOSTS = [h.strip() for h in _raw_hosts.split(',')] if _raw_hosts else ["*"]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -88,11 +91,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'auth_app.CustomUser'
 
-# CORS and cookies for SPA on localhost
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:8080',
-]
+# CORS dinámico (coma separada). Ej: "https://www.midominio.com,https://app.midominio.com"
+_raw_cors = os.environ.get("CORS_ALLOWED_ORIGINS")
+if _raw_cors:
+    CORS_ALLOWED_ORIGINS = [o.strip() for o in _raw_cors.split(',') if o.strip()]
+else:
+    CORS_ALLOWED_ORIGINS = ['http://localhost:8080']
+
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:8080',
-]
+
+# CSRF trusted origins (usar mismo formato que CORS). Debe incluir schema.
+_raw_csrf = os.environ.get("CSRF_TRUSTED_ORIGINS")
+if _raw_csrf:
+    CSRF_TRUSTED_ORIGINS = [o.strip() for o in _raw_csrf.split(',') if o.strip()]
+else:
+    # Por defecto reflejamos CORS si están en http/https
+    CSRF_TRUSTED_ORIGINS = [o for o in CORS_ALLOWED_ORIGINS if o.startswith('http://') or o.startswith('https://')]

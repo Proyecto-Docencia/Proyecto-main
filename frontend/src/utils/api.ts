@@ -1,5 +1,12 @@
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || (window as any).__API_BASE__ || '').replace(/\/$/, '');
+function api(path: string) {
+  // Intenta primero versión v1; mantenemos compatibilidad: si backend elimina legacy, el frontend ya apunta a v1
+  if (path.startsWith('/')) path = path.substring(1);
+  return `${API_BASE}/api/v1/${path}`;
+}
+
 export async function fetchMisPlanificaciones() {
-  const resp = await fetch('http://localhost:8081/api/plans/mis/', {
+  const resp = await fetch(api('plans/mis/'), {
     method: 'GET',
     credentials: 'include',
   });
@@ -8,7 +15,7 @@ export async function fetchMisPlanificaciones() {
 }
 
 export async function crearPlanificacion(data: any) {
-  const resp = await fetch('http://localhost:8081/api/plans/crear/', {
+  const resp = await fetch(api('plans/crear/'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -19,7 +26,7 @@ export async function crearPlanificacion(data: any) {
 }
 
 export async function getPlanificacionDetalle(id: number) {
-  const resp = await fetch(`http://localhost:8081/api/plans/${id}/`, {
+  const resp = await fetch(api(`plans/${id}/`), {
     method: 'GET',
     credentials: 'include',
   });
@@ -28,7 +35,7 @@ export async function getPlanificacionDetalle(id: number) {
 }
 
 export async function patchPlanificacion(id: number, data: any) {
-  const resp = await fetch(`http://localhost:8081/api/plans/${id}/`, {
+  const resp = await fetch(api(`plans/${id}/`), {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -39,7 +46,7 @@ export async function patchPlanificacion(id: number, data: any) {
 }
 
 export async function deletePlanificacion(id: number) {
-  const resp = await fetch(`http://localhost:8081/api/plans/${id}/`, {
+  const resp = await fetch(api(`plans/${id}/`), {
     method: 'DELETE',
     credentials: 'include',
   });
@@ -48,7 +55,7 @@ export async function deletePlanificacion(id: number) {
 }
 
 export async function crearChat(mensaje_usuario: string) {
-  const resp = await fetch('http://localhost:8081/api/chat/crear/', {
+  const resp = await fetch(api('chat/crear/'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -62,7 +69,7 @@ export async function crearChat(mensaje_usuario: string) {
 }
 
 export async function fetchProfile() {
-  const resp = await fetch('http://localhost:8081/api/auth/profile/', {
+  const resp = await fetch(api('auth/profile/'), {
     method: 'GET',
     credentials: 'include',
   });
@@ -71,7 +78,7 @@ export async function fetchProfile() {
 }
 
 export async function saveProfile(data: any) {
-  const resp = await fetch('http://localhost:8081/api/auth/profile/', {
+  const resp = await fetch(api('auth/profile/'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -82,7 +89,7 @@ export async function saveProfile(data: any) {
 }
 
 export async function fetchMisChats() {
-  const resp = await fetch('http://localhost:8081/api/chat/mis/', {
+  const resp = await fetch(api('chat/mis/'), {
     method: 'GET',
     credentials: 'include',
   });

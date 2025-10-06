@@ -1,61 +1,70 @@
 import json
 import os
-import requests
+import time
 from django.http import JsonResponse, HttpRequest
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+
+from .retrieval import search, format_context
+from chat_app.ai_service import consultar_gemini
+
+# Desactivado por defecto hasta que el operador lo habilite explícitamente
+ENABLE_RAG = os.environ.get("ENABLE_RAG", "0") == "1"
 
 
-RAG_ENDPOINT = os.environ.get("RAG_ENDPOINT", "").strip()
-RAG_TOKEN = os.environ.get("RAG_TOKEN", "").strip()
-
-
+@csrf_exempt
 @require_http_methods(["POST"])
 def query_rag(request: HttpRequest):
+    if not ENABLE_RAG:
+        return JsonResponse({"error": "RAG desactivado", "enabled": False}, status=503)
+
+    t0 = time.time()
     try:
         payload = json.loads(request.body.decode("utf-8"))
     except Exception:
         payload = {}
 
-    question = (payload.get("question") or payload.get("mensaje_usuario") or "").strip()
-    if not question:
-        return JsonResponse({"error": "question required"}, status=400)
+    mensaje = (payload.get("mensaje_usuario") or payload.get("question") or "").strip()
+    if not mensaje:
+        return JsonResponse({"error": "mensaje_usuario requerido"}, status=400)
 
-    if not RAG_ENDPOINT:
-        return JsonResponse({"error": "No RAG_ENDPOINT configured"}, status=500)
+    top_k = payload.get("top_k") or None
+    # Retrieval
+    results = search(mensaje, top_k=top_k)
+    contexto = format_context(results) if results else ""
 
-    # Build URL
-    if any(p in RAG_ENDPOINT for p in ("/run/", "/api/", "/predict")):
-        url = RAG_ENDPOINT.rstrip("/")
+    # Construcción de prompt para Gemini reutilizando la función existente.
+    if contexto:
+        prompt = (
+            "Eres un asistente pedagógico. Usa SOLO el contexto si responde a la pregunta. "
+            "Si no está en el contexto di que no lo encuentras.\n\n"
+            f"Contexto:\n{contexto}\nPregunta: {mensaje}\n\nRespuesta concisa (<=180 palabras) con fuentes al final:"  # noqa: E501
+        )
     else:
-        url = RAG_ENDPOINT.rstrip("/") + "/run/predict"
+        prompt = (
+            "No se encontraron fragmentos relevantes. Responde de forma general sin inventar "
+            "datos específicos de documentos. Pregunta: " + mensaje
+        )
 
-    headers = {"Content-Type": "application/json"}
-    if RAG_TOKEN:
-        headers["Authorization"] = f"Bearer {RAG_TOKEN}"
+    respuesta = consultar_gemini(prompt)
 
-    try:
-        resp = requests.post(url, json={"data": [question]}, headers=headers, timeout=30)
-    except requests.exceptions.RequestException as e:
-        return JsonResponse({"error": f"RAG connection error: {e}"}, status=502)
+    fuentes = [
+        {
+            "doc": r["doc"],
+            "page": r["page"],
+            "score": round(r["score"], 4),
+            "preview": (r["text"][:160] + "…") if len(r["text"]) > 160 else r["text"],
+        }
+        for r in results
+    ]
 
-    if resp.status_code != 200:
-        # return useful body if possible
-        try:
-            body = resp.json()
-        except Exception:
-            body = resp.text
-        return JsonResponse({"error": "RAG returned error", "detail": body}, status=502)
-
-    try:
-        data = resp.json()
-    except Exception:
-        return JsonResponse({"error": "RAG returned non-JSON response", "detail": resp.text}, status=502)
-
-    # Expecting {"data": [answer]}
-    answer = None
-    if isinstance(data, dict) and "data" in data and len(data["data"]) > 0:
-        answer = data["data"][0]
-    else:
-        answer = data
-
-    return JsonResponse({"answer": answer}, status=200)
+    return JsonResponse(
+        {
+            "respuesta_ia": respuesta,
+            "fuentes": fuentes,
+            "fallback_sin_contexto": not bool(results),
+            "latencia_ms": int((time.time() - t0) * 1000),
+            "enabled": True,
+        },
+        status=200,
+    )
