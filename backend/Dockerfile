@@ -8,10 +8,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Dependencias de sistema (mysqlclient)
+# Dependencias de sistema (mysqlclient requiere headers de MySQL)
 RUN apt-get update && apt-get install -y \
-        build-essential default-libmysqlclient-dev pkg-config \
-    && rm -rf /var/lib/apt/lists/*
+    build-essential default-libmysqlclient-dev pkg-config \
+  && rm -rf /var/lib/apt/lists/*
 
 # Instalar sólo dependencias core
 COPY requirements.txt ./
@@ -28,7 +28,9 @@ RUN if [ "$ENABLE_RAG" = "1" ]; then \
 
 COPY src ./src
 COPY entrypoint.sh /entrypoint.sh
-RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
+COPY wait_for_db.sh /app/wait_for_db.sh
+RUN sed -i 's/\r$//' /entrypoint.sh /app/wait_for_db.sh \
+  && chmod +x /entrypoint.sh /app/wait_for_db.sh || true
 
 WORKDIR /app/src
 EXPOSE 8000

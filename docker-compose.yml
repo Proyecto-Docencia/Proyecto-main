@@ -11,29 +11,30 @@ services:
     build: ./backend
     ports:
       - "8081:8000" # Changed port to avoid conflicts
+    env_file:
+      - ./env/.env
     environment:
-      - DJANGO_DEBUG=1
-      - DB_HOST=db
-      - DB_NAME=proyecto
-      - DB_USER=root
-      - DB_PASSWORD=rootpass
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - GEMINI_MODEL=gemini-2.5-flash
-      - GEMINI_THINKING_BUDGET=0
-    depends_on:
-      - db
-    restart: unless-stopped
-
-  db:
-    image: mysql:8.0
-    environment:
-      MYSQL_DATABASE: proyecto
-      MYSQL_ROOT_PASSWORD: rootpass
-    ports:
-      - "3307:3306" # Changed port to avoid conflicts
+      # Permite sobreescribir puntualmente sin editar el .env
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-${GEMINI_API_KEY}}
     volumes:
-      - db_data:/var/lib/mysql
+      - ./env:/app/env:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
-volumes:
-  db_data:
+  # Nota: Proxy de Cloud SQL se ejecuta externamente en el host.
+  # Inicia en Windows (PowerShell):
+  #   $env:GOOGLE_APPLICATION_CREDENTIALS="C:/ruta/al/admin123.json"
+  #   cloud-sql-proxy --port 3306 ${INSTANCE_CONNECTION_NAME}
+  # Ajusta DB_HOST=host.docker.internal en env/.env para que el contenedor se conecte al proxy externo.
+
+  # Opcional: si quieres usar el Cloud SQL Auth Proxy en lugar de exponer la IP pública de la DB
+  # Descomenta este bloque y ajusta INSTANCE_CONNECTION_NAME y ruta a credenciales.
+  # cloudsql-proxy:
+  #   image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.11.4
+  #   command: ["--port=5432", "${INSTANCE_CONNECTION_NAME}"]
+  #   environment:
+  #     GOOGLE_APPLICATION_CREDENTIALS: /config/credentials.json
+  #   volumes:
+  #     - ./env/credentials.json:/config/credentials.json:ro
+  #   restart: unless-stopped

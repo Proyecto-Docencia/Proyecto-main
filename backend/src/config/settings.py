@@ -1,6 +1,22 @@
 import os
 from pathlib import Path
 
+# Cargar variables desde env/.env si existe
+try:
+    from dotenv import load_dotenv  # type: ignore
+    # Intentar primero ruta montada en contenedor /app/env/.env
+    candidate_paths = [
+        Path('/app/env/.env'),
+        Path(__file__).resolve().parent.parent.parent / 'env' / '.env'
+    ]
+    for env_path in candidate_paths:
+        if env_path.exists():
+            load_dotenv(env_path)
+            break
+except Exception:
+    # Silencioso: si no existe python-dotenv o el archivo, continuar con variables del entorno
+    pass
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-secret-key")
@@ -54,12 +70,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+_db_password = os.environ.get('DB_PASSWORD') or os.environ.get('DB_PASS') or 'rootpass'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.environ.get('DB_NAME', 'proyecto'),
         'USER': os.environ.get('DB_USER', 'root'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'rootpass'),
+        'PASSWORD': _db_password,
         'HOST': os.environ.get('DB_HOST', 'db'),
         'PORT': os.environ.get('DB_PORT', '3306'),
         'OPTIONS': {
