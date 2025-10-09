@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getMaterialById } from '../data/materials';
 import '../css/Materials.css';
-import { FileDown, Volume2, ArrowLeft, Pause, Play, Square, Headphones } from 'lucide-react';
-import { prepareSpeechFromPdf, SpeechController } from '../utils/pdfAudio';
+import { FileDown, ArrowLeft, Headphones } from 'lucide-react';
+import PdfHtmlViewer from '../components/PdfHtmlViewer';
 
 const MaterialDetail: React.FC = () => {
   const params = useParams();
@@ -26,91 +26,12 @@ const MaterialDetail: React.FC = () => {
     );
   }
 
-  const controllerRef = useRef<SpeechController | null>(null);
-  const [state, setState] = useState<'idle' | 'loading' | 'playing' | 'paused'>('idle');
-  const [pos, setPos] = useState(0); // seconds
-  const [total, setTotal] = useState(0); // seconds
-  const [rate, setRate] = useState(1);
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null);
-  const [pdfAvailable, setPdfAvailable] = useState<boolean | null>(null);
+  // Funcionalidad de generación / reproducción de audio eliminada
+  // Estado de disponibilidad ya no es necesario con la extracción directa
   // vistaActual: 'pdf' | 'video' | 'podcast'
   const [viewMode, setViewMode] = useState<'pdf' | 'video' | 'podcast'>('pdf');
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      const c = controllerRef.current;
-      if (!c) return;
-      const s = c.getState();
-      setPos(s.currentTime);
-      setTotal(s.totalTime);
-      if (s.state === 'ended') setState('idle');
-    }, 250);
-    return () => clearInterval(id);
-  }, []);
-
-  // Cargar voces del sistema
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    const loadVoices = () => {
-      const v = window.speechSynthesis.getVoices();
-      setVoices(v);
-      // Elegir una voz española si existe
-      const es = v.find((vv) => /es[-_]/i.test(vv.lang));
-      setVoice(es || v[0] || null);
-    };
-    loadVoices();
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-    return () => {
-      window.speechSynthesis.onvoiceschanged = null as any;
-    };
-  }, []);
-
-  const handleGenerateAudio = async () => {
-    if (!pdfUrl) return;
-    try {
-      if (!controllerRef.current) {
-        setState('loading');
-        controllerRef.current = await prepareSpeechFromPdf(pdfUrl, {
-          lang: 'es-ES',
-          rate,
-          pitch: 1,
-          wpm: 170,
-          voice: voice || undefined,
-        });
-      }
-      // Si teníamos una posición previa (por ejemplo al cambiar voz), intenta reanudar desde ahí
-      const startAt = pos > 0 ? pos : undefined;
-      controllerRef.current.play(startAt);
-      setState('playing');
-    } catch (e) {
-      console.error(e);
-      setState('idle');
-      alert('No se pudo generar el audio del PDF.');
-    }
-  };
-
-  const handlePause = () => {
-    controllerRef.current?.pause();
-    setState('paused');
-  };
-
-  const handleResume = () => {
-    controllerRef.current?.resume();
-    setState('playing');
-  };
-
-  const handleStop = () => {
-    controllerRef.current?.stop();
-    setState('idle');
-    setPos(0);
-  };
-
-  const onSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const seconds = Number(e.target.value);
-    setPos(seconds);
-    controllerRef.current?.seekToSeconds(seconds);
-  };
+  // Efectos de voz / timers removidos
 
   // Asegurar URLs robustas frente a acentos y espacios (si ya vienen encoded evitamos doble codificación)
   const pdfUrl = material.pdf ? (/[%]/.test(material.pdf) ? material.pdf : encodeURI(material.pdf)) : undefined;
@@ -121,20 +42,8 @@ const MaterialDetail: React.FC = () => {
   const isMp4 = !!videoUrl && /\.mp4($|\?)/i.test(videoUrl);
   const isPodcastMp4 = !!podcastUrl && /\.mp4($|\?)/i.test(podcastUrl);
 
-  // Verificar disponibilidad real del PDF (HEAD) para evitar iframe vacío
-  useEffect(() => {
-    let aborted = false;
-    (async () => {
-      if (!pdfUrl) { setPdfAvailable(false); return; }
-      try {
-        const res = await fetch(pdfUrl, { method: 'HEAD' });
-        if (!aborted) setPdfAvailable(res.ok && res.headers.get('content-type')?.includes('pdf') ? true : true); // si el servidor no da tipo igual intentamos
-      } catch {
-        if (!aborted) setPdfAvailable(false);
-      }
-    })();
-    return () => { aborted = true; };
-  }, [pdfUrl]);
+  // Cargar y extraer texto del PDF cuando se selecciona "pdf"
+  // Lógica de extracción movida a PdfHtmlViewer
 
   return (
     <div className="materials-container">
@@ -156,106 +65,10 @@ const MaterialDetail: React.FC = () => {
           <div className="expanded-content">
             <div className="expanded-body">
 
-              <div className="material-actions" style={{ gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                {/* Selectores de voz y velocidad */}
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                  <label style={{ fontSize: 12, color: '#64748b' }}>Voz:</label>
-                  <select
-                    value={voice?.name || ''}
-                    onChange={async (e) => {
-                      const v = voices.find((vv) => vv.name === e.target.value) || null;
-                      setVoice(v);
-                      // Si ya hay controlador, reiniciar con nueva voz manteniendo estado
-                      if (controllerRef.current && pdfUrl) {
-                        const wasPlaying = state === 'playing';
-                        controllerRef.current.dispose();
-                        controllerRef.current = null;
-                        setPos(0);
-                        if (wasPlaying) {
-                          await handleGenerateAudio();
-                        }
-                      }
-                    }}
-                    className="btn-small"
-                    style={{ minWidth: 180 }}
-                  >
-                    {voices.length === 0 && <option value="">(Cargando voces…)</option>}
-                    {voices.map((v) => (
-                      <option key={v.name} value={v.name}>
-                        {v.name} ({v.lang})
-                      </option>
-                    ))}
-                  </select>
-                  <label style={{ fontSize: 12, color: '#64748b' }}>Velocidad:</label>
-                  <select
-                    value={rate}
-                    onChange={async (e) => {
-                      const r = Number(e.target.value);
-                      setRate(r);
-                      if (controllerRef.current && pdfUrl) {
-                        const wasPlaying = state === 'playing';
-                        controllerRef.current.dispose();
-                        controllerRef.current = null;
-                        setPos(0);
-                        if (wasPlaying) {
-                          await handleGenerateAudio();
-                        }
-                      }
-                    }}
-                    className="btn-small"
-                    style={{ minWidth: 120 }}
-                  >
-                    {[0.8, 1, 1.2, 1.4].map((r) => (
-                      <option key={r} value={r}>{r.toFixed(1)}x</option>
-                    ))}
-                  </select>
-                </div>
-                {state === 'idle' && (
-                  <button onClick={handleGenerateAudio} disabled={!pdfUrl} className="btn-expanded primary">
-                    <Volume2 className="w-4 h-4" /> Generar Audio del Texto
-                  </button>
-                )}
-                {state === 'loading' && (
-                  <button disabled className="btn-expanded secondary">Preparando audio…</button>
-                )}
-                {state === 'playing' && (
-                  <>
-                    <button onClick={handlePause} className="btn-small secondary inline-flex items-center gap-1">
-                      <Pause className="w-4 h-4" /> Pausar
-                    </button>
-                    <button onClick={handleStop} className="btn-small secondary inline-flex items-center gap-1">
-                      <Square className="w-4 h-4" /> Detener
-                    </button>
-                  </>
-                )}
-                {state === 'paused' && (
-                  <>
-                    <button onClick={handleResume} className="btn-small secondary inline-flex items-center gap-1">
-                      <Play className="w-4 h-4" /> Reanudar
-                    </button>
-                    <button onClick={handleStop} className="btn-small secondary inline-flex items-center gap-1">
-                      <Square className="w-4 h-4" /> Detener
-                    </button>
-                  </>
-                )}
-                {/* Slider de progreso/seek */}
-                {(state === 'playing' || state === 'paused') && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '260px' }}>
-                    <input
-                      type="range"
-                      min={0}
-                      max={Math.max(1, Math.round(total))}
-                      value={Math.round(pos)}
-                      onChange={onSeek}
-                      style={{ width: 200 }}
-                    />
-                    <span style={{ fontSize: 12, color: '#64748b' }}>
-                      {formatTime(pos)} / {formatTime(total)}
-                    </span>
-                  </div>
-                )}
+              <div className="material-actions" style={{ gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', display:'flex', justifyContent:'center', width:'100%' }}>
+                {/* Controles de audio eliminados */}
                 {/* Toggle PDF / Video siempre visible (si hay video). Uno activo (azul), otro inactivo (gris). */}
-                <div style={{ display:'flex', gap:'.5rem', flexWrap:'wrap' }}>
+                <div style={{ display:'flex', gap:'.5rem', flexWrap:'wrap', justifyContent:'center' }}>
                   <button
                     type="button"
                     onClick={() => setViewMode('pdf')}
@@ -332,22 +145,10 @@ const MaterialDetail: React.FC = () => {
                 )
               ) : (
                 <>
-                  {pdfUrl && pdfAvailable !== false && (
-                    <div className="pdf-viewer">
-                      <embed
-                        src={`${pdfUrl}#toolbar=1&navpanes=0`}
-                        type="application/pdf"
-                        className="pdf-iframe"
-                        onError={() => setPdfAvailable(false)}
-                      />
-                    </div>
-                  )}
-                  {(!pdfUrl || pdfAvailable === false) && (
-                    <div className="expanded-body" style={{ padding: '1rem' }}>
-                      <p style={{ color: '#64748b', margin: 0 }}>
-                        {pdfUrl ? 'El PDF no pudo cargarse (posible nombre con acento o no encontrado).' : 'No hay PDF disponible para este material.'}
-                      </p>
-                    </div>
+                  {pdfUrl ? (
+                    <PdfHtmlViewer pdfUrl={pdfUrl} />
+                  ) : (
+                    <div style={{ padding: '1rem', color: '#64748b' }}>No hay PDF disponible para este material.</div>
                   )}
                 </>
               )}
@@ -361,9 +162,4 @@ const MaterialDetail: React.FC = () => {
 
 export default MaterialDetail;
 
-function formatTime(sec: number) {
-  if (!isFinite(sec)) return '0:00';
-  const s = Math.floor(sec % 60);
-  const m = Math.floor(sec / 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
-}
+// formatTime eliminado junto con controles de audio
