@@ -1,0 +1,223 @@
+#################################################################################################
+# Pipeline simplificado para desplegar el backend Django en Azure App Service (Linux)
+# - Usa agente Ubuntu
+# - Empaqueta sólo el código de backend/src
+# - Delega instalación de dependencias a Oryx (SCM_DO_BUILD_DURING_DEPLOYMENT=true)
+# - Configura variables de App Service (sin exponer secretos en YAML)
+# - Opcional: ejecutar migraciones remotas tras el deploy
+#
+# Requisitos antes de usar:
+# 1) Crear un Service Connection llamado 'ia-backend' (o ajusta azureSubscription).
+# 2) Definir variables seguras en la Biblioteca (Variable Group) o como secret variables:
+#    DB_ENGINE=mysql
+#    DB_HOST=<host o ip o nombre del servicio gestionado>
+#    DB_PORT=3306 (o el que uses en producción)
+#    DB_NAME=<nombre_bd>
+#    DB_USER=<usuario>
+#    DB_PASSWORD=<secreto>
+# 3) Ajustar AZURE_RESOURCE_GROUP y AZURE_WEBAPP_NAME abajo.
+# 4) (Opcional) Si usas Cloud SQL Proxy / otro túnel en producción, sustituir DB_HOST por el host accesible.
+# 5) Asegúrate de que AUTH_USER_MODEL y migraciones se pueden ejecutar con la base ya creada.
+#################################################################################################
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  name: 'Default'
+  demands:
+    - Agent.Name -equals agentepipe
+
+variables:
+  PYTHON_VERSION: '3.11'
+  BACKEND_DIR: 'backend/src'
+  PACKAGE_NAME: 'backend.zip'
+  AZURE_WEBAPP_NAME: 'ia-backend'          # Cambia si tu WebApp tiene otro nombre
+  AZURE_RESOURCE_GROUP: 'rg-ia-backend'     # TODO: actualiza al nombre real del Resource Group
+  STARTUP_CMD: 'gunicorn config.wsgi:application --bind=0.0.0.0 --timeout 90'
+  RUN_MIGRATIONS: 'true'                   # Pon en 'false' si no quieres migrar automáticamente
+  INCLUDE_DOCS: 'false'                    # Cambia a 'true' si quieres empaquetar los PDFs de docs
+  AZURE_WEBAPP_HOST: 'ia-backend-g3fxgve3hcdvhpa6.brazilsouth-01.azurewebsites.net'  # FQDN real de tu Web App
+
+stages:
+  - stage: Build
+    displayName: 'Build (empacado código)'
+    jobs:
+      - job: Package
+        displayName: 'Preparar artefacto'
+        steps:
+          - checkout: self
+            clean: true
+          - task: PythonScript@0
+            displayName: 'Detectar ruta manage.py'
+            inputs:
+              scriptSource: 'inline'
+              script: |
+                import os, sys
+                root = os.environ.get('BUILD_SOURCESDIRECTORY') or os.getcwd()
+                candidates = [
+                    os.path.join(root, 'backend', 'src', 'manage.py'),  # repo/backend/src
+                    os.path.join(root, 'src', 'manage.py'),             # repo/src
+                    os.path.join(root, 'backend', 'manage.py'),         # fallback unusual
+                ]
+                found = None
+                for c in candidates:
+                    if os.path.isfile(c):
+                        found = c
+                        break
+                if not found:
+                    print('Listado raíz para diagnóstico:')
+                    for p in os.listdir(root):
+                        print(' -', p)
+                    print('ERROR: No se encontró ninguna ruta válida de manage.py en', candidates, file=sys.stderr)
+                    sys.exit(1)
+                base_dir = os.path.dirname(found)
+                print(f'Encontrado manage.py en: {found}')
+                print(f'Base project dir: {base_dir}')
+                print(f'##vso[task.setvariable variable=DETECTED_BACKEND_BASE]{base_dir}')
+                if base_dir.endswith(os.path.join('backend','src')):
+                    print(f'##vso[task.setvariable variable=DETECTED_REPO_BACKEND_DIR]{os.path.join(root, "backend")}')
+                elif base_dir.endswith('src') and os.path.isdir(os.path.join(root,'backend')):
+                    print(f'##vso[task.setvariable variable=DETECTED_REPO_BACKEND_DIR]{os.path.join(root, "backend")}')
+                else:
+                    print(f'##vso[task.setvariable variable=DETECTED_REPO_BACKEND_DIR]{base_dir}')
+                wsgi = os.path.join(base_dir,'config','wsgi.py')
+                if not os.path.isfile(wsgi):
+                    print('ADVERTENCIA: config/wsgi.py no encontrado en', wsgi, file=sys.stderr)
+
+          - powershell: |
+              Write-Host "Detected backend base: $(DETECTED_BACKEND_BASE)"
+              if (-not "$(DETECTED_BACKEND_BASE)") { Write-Error 'Variable DETECTED_BACKEND_BASE vacía'; exit 1 }
+            displayName: 'Echo ruta detectada'
+
+          # Nuevo empaquetado: usar Python para forzar separadores '/' y excluir directorios innecesarios.
+          - task: PythonScript@0
+            displayName: 'Crear ZIP de código (normalizando paths)'
+            inputs:
+              scriptSource: 'inline'
+              script: |
+                import os, sys, zipfile
+                base = os.environ.get('DETECTED_BACKEND_BASE')
+                if not base or not os.path.isdir(base):
+                    print('ERROR: Ruta base inválida:', base, file=sys.stderr)
+                    sys.exit(1)
+                parent = os.path.dirname(base)
+                package_name = os.environ.get('PACKAGE_NAME','backend.zip')
+                zip_path = os.path.join(parent, package_name)
+                include_docs = os.environ.get('INCLUDE_DOCS','false').lower() == 'true'
+                EXCLUDE_DIR_NAMES = {'__pycache__', '.git', '.github', '.venv'}
+                EXCLUDE_DIR_PARTS = set() if include_docs else {'docs'}
+                EXCLUDE_EXT = {'.pyc', '.pyo'}
+                if os.path.exists(zip_path):
+                    os.remove(zip_path)
+                total=0
+                with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
+                    for root, dirs, files in os.walk(base):
+                        dirs[:] = [d for d in dirs if d not in EXCLUDE_DIR_NAMES and d not in EXCLUDE_DIR_PARTS]
+                        rel_root = os.path.relpath(root, base)
+                        if rel_root == '.':
+                            rel_root = ''
+                        parts = set([p for p in rel_root.split(os.sep) if p])
+                        if parts & EXCLUDE_DIR_PARTS:
+                            continue
+                        for f in files:
+                            ext = os.path.splitext(f)[1].lower()
+                            if ext in EXCLUDE_EXT:
+                                continue
+                            fp = os.path.join(root, f)
+                            rel_path = os.path.join(rel_root, f) if rel_root else f
+                            arc = rel_path.replace(os.sep, '/')
+                            zf.write(fp, arc)
+                            total += 1
+                    # Incluir requirements en la raíz del zip
+                    parent_req = [
+                        os.path.join(parent, 'requirements.txt'),
+                        os.path.join(parent, 'requirements-rag.txt'),
+                    ]
+                    for rp in parent_req:
+                        if os.path.isfile(rp):
+                            arc = os.path.basename(rp)
+                            zf.write(rp, arc)
+                            total += 1
+                            print('Incluido:', arc)
+                size = os.path.getsize(zip_path)
+                print(f'ZIP creado: {zip_path} ({size} bytes, {total} entradas)')
+                print(f'##vso[task.setvariable variable=PACKAGED_ZIP]{zip_path}')
+                with zipfile.ZipFile(zip_path) as zf:
+                    names = zf.namelist()[:40]
+                    print('Primeras entradas:')
+                    for n in names:
+                        print(' -', n)
+                    if 'requirements.txt' not in zf.namelist():
+                        print('ADVERTENCIA: requirements.txt no incluido - Oryx podría no instalar dependencias', file=sys.stderr)
+                    if not any(p.endswith('manage.py') and p.count('/')<=1 for p in zf.namelist()):
+                        print('ADVERTENCIA: manage.py no está en la raíz del paquete', file=sys.stderr)
+
+          - powershell: |
+              Write-Host "Artefacto final: $(PACKAGED_ZIP)"
+              if (-not (Test-Path "$(PACKAGED_ZIP)")) { Write-Error 'No se encontró el zip empaquetado'; exit 1 }
+            displayName: 'Verificar ZIP'
+
+          - publish: $(PACKAGED_ZIP)
+            artifact: backend_package
+            displayName: 'Publicar artefacto backend'
+
+  - stage: Deploy
+    displayName: 'Deploy a Azure App Service'
+    dependsOn: Build
+    jobs:
+      - job: DeployBackend
+        displayName: 'Desplegar Backend'
+        steps:
+          - download: current
+            artifact: backend_package
+
+          - task: AzureWebApp@1
+            displayName: 'Deploy código (WEBSITE_RUN_FROM_PACKAGE)'
+            inputs:
+              azureSubscription: 'ia-backend'
+              appType: 'webAppLinux'
+              appName: '$(AZURE_WEBAPP_NAME)'
+              package: '$(Pipeline.Workspace)/backend_package/$(PACKAGE_NAME)'
+              runtimeStack: 'PYTHON|3.11'
+              startUpCommand: '$(STARTUP_CMD)'
+
+          # NOTA: App Settings y migraciones deben configurarse manualmente en el Portal de Azure
+          # (Option A: sin Azure CLI en agente). Deja este health check básico sin CLI.
+          - powershell: |
+              $hosts = @()
+              if (-not [string]::IsNullOrWhiteSpace("$(AZURE_WEBAPP_HOST)")) { $hosts += "$(AZURE_WEBAPP_HOST)" }
+              $hosts += "$(AZURE_WEBAPP_NAME).azurewebsites.net"
+              $ok = $false
+              foreach ($h in $hosts) {
+                $url = "https://$h/healthz"
+                Write-Host "Chequeando host: $($h)"
+                for ($i=1; $i -le 5; $i++) {
+                  try {
+                    $resp = Invoke-WebRequest -Uri $url -UseBasicParsing -Method GET -TimeoutSec 20 -ErrorAction Stop
+                    Write-Host "HTTP Status: $($resp.StatusCode)"
+                    if ($resp.StatusCode -eq 200) { $ok = $true; break }
+                  } catch {
+                    Write-Warning "(Aviso) Intento $i/5 falló para $($h): $($_.Exception.Message)"; Start-Sleep -Seconds 8
+                  }
+                }
+                if ($ok) { break }
+              }
+              if (-not $ok) { Write-Warning 'Health check no logró respuesta 200/302 en ninguno de los hosts probados.' }
+            displayName: 'Health check (PowerShell)'
+
+#################################################################################################
+# NOTAS:
+# - Los secretos de DB deben configurarse como variables secretas en la pipeline (o variable group).
+# - Para Cloud SQL Proxy u otro túnel: no se incluye aquí; el App Service debe poder alcanzar el host.
+# - Si requieres storage para archivos estáticos, añade collectstatic en un paso previo y sube a Azure Storage.
+# - Si necesitas RAG opcional, añade variable ENABLE_RAG y condicional para instalar requirements-rag.txt.
+# - Revisa logs en Azure: az webapp log tail -n $(AZURE_WEBAPP_NAME) -g $(AZURE_RESOURCE_GROUP)
+#################################################################################################
