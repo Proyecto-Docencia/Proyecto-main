@@ -1,3 +1,23 @@
+# Terraform
+.terraform/
+terraform/
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+terraform.tfvars
+*.tfvars
+*.tfvars.json
+
+# Local credentials / profiles (do NOT commit)
+**/aws_credentials*
+**/.aws/
+
 # General
 .DS_Store
 Thumbs.db
