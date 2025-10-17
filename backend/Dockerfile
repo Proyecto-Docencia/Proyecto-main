@@ -3,8 +3,9 @@ FROM python:3.11-slim
 
 ARG ENABLE_RAG=0
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    ENABLE_RAG=${ENABLE_RAG}
+  PYTHONUNBUFFERED=1 \
+  ENABLE_RAG=${ENABLE_RAG} \
+  PORT=8080
 
 WORKDIR /app
 
@@ -33,5 +34,5 @@ RUN sed -i 's/\r$//' /entrypoint.sh /app/wait_for_db.sh \
   && chmod +x /entrypoint.sh /app/wait_for_db.sh || true
 
 WORKDIR /app/src
-EXPOSE 8000
+EXPOSE $PORT
 ENTRYPOINT ["/entrypoint.sh"]

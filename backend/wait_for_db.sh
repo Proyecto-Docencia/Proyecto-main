@@ -15,7 +15,7 @@ echo "[wait_for_db] Esperando base de datos $ENGINE en $HOST:$PORT (db=$NAME use
 if [ "${DB_DEBUG}" = "1" ]; then
     pw="${PASS}"
     pw_len=${#pw}
-    # Obtener primer y último carácter de forma POSIX (sin expansiones bash)
+    # Obtener primer y Ãºltimo carÃ¡cter de forma POSIX (sin expansiones bash)
     if [ "$pw_len" -gt 0 ]; then
         first_char=`printf '%s' "$pw" | cut -c1`
         last_char=`printf '%s' "$pw" | rev | cut -c1`
@@ -24,7 +24,7 @@ if [ "${DB_DEBUG}" = "1" ]; then
     fi
     printf '[wait_for_db][debug] Password len=%s first_char=%s last_char=%s\n' "$pw_len" "$first_char" "$last_char"
     case "$first_char" in '"') echo '[wait_for_db][debug] ADVERTENCIA: primer caracter es comilla (revisa .env)';; esac
-    case "$last_char" in '"') echo '[wait_for_db][debug] ADVERTENCIA: último caracter es comilla (revisa .env)';; esac
+    case "$last_char" in '"') echo '[wait_for_db][debug] ADVERTENCIA: Ãºltimo caracter es comilla (revisa .env)';; esac
 fi
 
 python <<PY
@@ -47,21 +47,25 @@ for attempt in range(1, MAX_RETRIES+1):
         if ENGINE.startswith('postg'):
             import psycopg
             psycopg.connect(host=HOST, port=PORT, user=USER, password=PASS, dbname=NAME, connect_timeout=3).close()
-            log('Conexión PostgreSQL OK')
+            log('ConexiÃ³n PostgreSQL OK')
             break
         else:
             import MySQLdb
-            MySQLdb.connect(host=HOST, port=PORT, user=USER, passwd=PASS, db=NAME, connect_timeout=3).close()
-            log('Conexión MySQL OK')
+            # Si HOST apunta a un socket Unix de Cloud SQL (p. ej., /cloudsql/PROJECT:REGION:INSTANCE)
+            if isinstance(HOST, str) and HOST.startswith('/cloudsql/'):
+                MySQLdb.connect(unix_socket=HOST, user=USER, passwd=PASS, db=NAME, connect_timeout=3).close()
+            else:
+                MySQLdb.connect(host=HOST, port=PORT, user=USER, passwd=PASS, db=NAME, connect_timeout=3).close()
+            log('ConexiÃ³n MySQL OK')
             break
     except Exception as e:
-        # Manejo específico para error 1045 (Access denied)
+        # Manejo especÃ­fico para error 1045 (Access denied)
         if '1045' in str(e):
             log(f"ERROR acceso denegado (1045) en intento {attempt}: {e}")
-            log("Guía rápida: 1) Verifica usuario y password. 2) Comprueba con mysql CLI: mysql -h 127.0.0.1 -P $PORT -u $USER -p 3) Crea usuario / otorga privilegios si falta. 4) Asegura que la DB existe: SHOW DATABASES LIKE '%s';" % NAME)
+            log("GuÃ­a rÃ¡pida: 1) Verifica usuario y password. 2) Comprueba con mysql CLI: mysql -h 127.0.0.1 -P $PORT -u $USER -p 3) Crea usuario / otorga privilegios si falta. 4) Asegura que la DB existe: SHOW DATABASES LIKE '%s';" % NAME)
             traceback.print_exc()
             sys.exit(2)
-        log(f"Intento {attempt}/{MAX_RETRIES} falló: {e}")
+        log(f"Intento {attempt}/{MAX_RETRIES} fallÃ³: {e}")
         traceback.print_exc()
         if attempt == MAX_RETRIES:
             log('ERROR: No se pudo conectar a la base de datos. Abortando.')
