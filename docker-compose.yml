@@ -1,16 +1,17 @@
 services:
+
   ia_frontend:
     container_name: ia_frontend
     build: ./frontend
     ports:
-      - "8080:80" # Changed port to avoid conflicts
+      - "8001:80" # Puerto cambiado para evitar conflicto con backend
     restart: unless-stopped
 
   ia_backend:
     container_name: ia_backend
     build: ./backend
     ports:
-      - "8081:8000" # Changed port to avoid conflicts
+      - "8080:8080" # Puerto backend, sin conflicto
     env_file:
       - ./env/.env
     environment:
@@ -25,7 +26,7 @@ services:
   # Nota: Proxy de Cloud SQL se ejecuta externamente en el host.
   # Inicia en Windows (PowerShell):
   #   $env:GOOGLE_APPLICATION_CREDENTIALS="C:/ruta/al/admin123.json"
-  #   cloud-sql-proxy --port 3306 ${INSTANCE_CONNECTION_NAME}
+  #   cloud-sql-proxy --port 3307 ${INSTANCE_CONNECTION_NAME}
   # Ajusta DB_HOST=host.docker.internal en env/.env para que el contenedor se conecte al proxy externo.
 
   # Opcional: si quieres usar el Cloud SQL Auth Proxy en lugar de exponer la IP pública de la DB

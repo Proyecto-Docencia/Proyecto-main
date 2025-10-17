@@ -1,16 +1,19 @@
 version: '3.8'
 
 services:
-
   frontend:
-
     container_name: ia_frontend
-
-    build: .
-
+    build:
+      context: .  # Especifica el contexto de build (la carpeta actual)
+      dockerfile: Dockerfile  # Asegúrate de que tu Dockerfile esté en la misma carpeta
+      args:
+        - VITE_API_BASE_URL=https://backend-django-79197934609.us-central1.run.app
     ports:
-
-      - "8080:80" # Changed port to avoid conflicts
-
+      - "8001:80"  # Puerto local:contenedor (cambiado para evitar conflicto con backend)
+    environment:
+      - NODE_ENV=production
     restart: unless-stopped
-
+    # Opcional: Si es desarrollo, descomenta para hot reload
+    # volumes:
+    #   - .:/app  # Monta el código local (ajusta /app según tu Dockerfile)
+    #   - /app/node_modules  # Evita conflictos con node_modules
