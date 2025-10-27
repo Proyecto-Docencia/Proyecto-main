@@ -1,0 +1,53 @@
+steps:
+  # Construir la imagen del frontend con la URL del backend
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '--build-arg'
+      - 'VITE_API_BASE_URL=${_VITE_API_BASE_URL}'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/frontend-repo/${_SERVICE_NAME}:latest'
+      - '.'
+
+  # Subir la imagen a Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/frontend-repo/${_SERVICE_NAME}:latest']
+
+  # Desplegar a Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE_NAME}'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/frontend-repo/${_SERVICE_NAME}:latest'
+      - '--region'
+      - '${_REGION}'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '80'
+      - '--timeout'
+      - '300s'
+      - '--memory'
+      - '${_MEMORY}'
+      - '--cpu'
+      - '${_CPU}'
+      - '--min-instances'
+      - '${_MIN_INSTANCES}'
+      - '--max-instances'
+      - '${_MAX_INSTANCES}'
+
+substitutions:
+  _SERVICE_NAME: 'frontend-react'
+  _REGION: 'us-central1'
+  _MEMORY: '512Mi'
+  _CPU: '1'
+  _MIN_INSTANCES: '0'
+  _MAX_INSTANCES: '5'
+  _VITE_API_BASE_URL: 'https://backend-django-a6zccy3fma-uc.a.run.app'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -80,7 +80,9 @@ const Registro = () => {
     
     try {
       // Registro real en backend
-      const resp = await fetch('http://localhost:8081/api/auth/register/', {
+      const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+      const registerUrl = `${base}/api/v1/auth/register/`;
+      const resp = await fetch(registerUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getMaterialById } from '../data/materials';
 import '../css/Materials.css';
-import { FileDown, ArrowLeft, Headphones } from 'lucide-react';
+import { FileDown, ArrowLeft, Headphones, BookOpen, Presentation } from 'lucide-react';
 import PdfHtmlViewer from '../components/PdfHtmlViewer';
 
 const MaterialDetail: React.FC = () => {
@@ -74,14 +74,18 @@ const MaterialDetail: React.FC = () => {
                     onClick={() => setViewMode('pdf')}
                     className={`btn-expanded ${viewMode === 'pdf' ? 'primary' : 'secondary'}`}
                     aria-pressed={viewMode === 'pdf'}
-                  >Ver PDF</button>
+                  >
+                    <BookOpen className="w-4 h-4" style={{marginRight:4}} /> Ver Contenido
+                  </button>
                   {material.video && (
                     <button
                       type="button"
                       onClick={() => setViewMode('video')}
                       className={`btn-expanded ${viewMode === 'video' ? 'primary' : 'secondary'}`}
                       aria-pressed={viewMode === 'video'}
-                    >Ver video</button>
+                    >
+                      <Presentation className="w-4 h-4" style={{marginRight:4}} /> Ver Video
+                    </button>
                   )}
                   {podcastUrl && (
                     <button
@@ -89,11 +93,13 @@ const MaterialDetail: React.FC = () => {
                       onClick={() => setViewMode('podcast')}
                       className={`btn-expanded ${viewMode === 'podcast' ? 'primary' : 'secondary'}`}
                       aria-pressed={viewMode === 'podcast'}
-                    ><Headphones className="w-4 h-4" style={{marginRight:4}} /> Escuchar Podcast</button>
+                    >
+                      <Headphones className="w-4 h-4" style={{marginRight:4}} /> Escuchar Podcast
+                    </button>
                   )}
                   {pdfUrl && (
                     <a href={pdfUrl} download className="btn-expanded secondary" style={{ whiteSpace:'nowrap' }}>
-                      <FileDown className="w-4 h-4" /> Descargar PDF
+                      <FileDown className="w-4 h-4" style={{marginRight:4}} /> Descargar PDF
                     </a>
                   )}
                 </div>

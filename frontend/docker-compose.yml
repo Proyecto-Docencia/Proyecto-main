@@ -7,7 +7,7 @@ services:
       context: .  # Especifica el contexto de build (la carpeta actual)
       dockerfile: Dockerfile  # Asegúrate de que tu Dockerfile esté en la misma carpeta
       args:
-        - VITE_API_BASE_URL=https://backend-django-79197934609.us-central1.run.app
+        - VITE_API_BASE_URL=https://backend-django-a6zccy3fma-uc.a.run.app
     ports:
       - "8001:80"  # Puerto local:contenedor (cambiado para evitar conflicto con backend)
     environment:

@@ -8,7 +8,8 @@ import {
   Menu,
   FileText,
   PlusCircle,
-  MessageCircle
+  MessageCircle,
+  PlayCircle
 } from 'lucide-react';
 import '../css/Sidebar.css';
 
@@ -64,6 +65,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onExpandChange }) => {
   };
 
   const menuItems = [
+    {
+      id: 'primeros-pasos',
+      title: 'Primeros Pasos',
+      icon: <PlayCircle className="sidebar-icon" />,
+      path: '/bienvenida',
+      subItems: []
+    },
     {
       id: 'material',
       title: 'Material',

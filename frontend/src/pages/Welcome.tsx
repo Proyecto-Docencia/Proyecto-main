@@ -20,6 +20,21 @@ const Welcome: React.FC = () => {
           </p>
         </header>
 
+        {/* Video de introducción */}
+        <section className="welcome-video-section">
+          <div className="welcome-video-container">
+            <video 
+              controls 
+              className="welcome-video"
+              poster="/docs/FondoPortalUSS.jpg"
+            >
+              <source src="/docs/Videos/video-inicio-(Creatividad-Cap1).mp4" type="video/mp4" />
+              <track kind="captions" label="Español" />
+              Tu navegador no soporta la reproducción de video.
+            </video>
+          </div>
+        </section>
+
         <section className="welcome-cards">
           {cards.map(card => (
             <div key={card.title} className="welcome-card">

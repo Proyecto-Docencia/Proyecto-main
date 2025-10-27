@@ -1,5 +1,5 @@
 import React from 'react';
-import { Send } from 'lucide-react';
+import { Send, Plus } from 'lucide-react';
 import { useChat } from '../hooks/useChat';
 
 function nowTime() {
@@ -11,12 +11,7 @@ function nowTime() {
 }
 
 const Chatbot: React.FC = () => {
-  const { messages, input, setInput, sendMessage, loading, chatEndRef } = useChat([
-    {
-      role: 'ai',
-      text: 'Te sugiero usar analogías culinarias: dividir una pizza, repartir dulces, etc. También puedes crear un juego donde los estudiantes representen fracciones con objetos físicos. ¿Te gustaría que genere algunos ejercicios específicos?',
-    },
-  ]);
+  const { messages, input, setInput, sendMessage, loading, chatEndRef, nuevaSesion } = useChat([]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -44,25 +39,42 @@ const Chatbot: React.FC = () => {
     <div className="min-h-[calc(100vh-0px)] p-6" style={{ position:'relative', zIndex:2 }}>
       <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-[calc(100vh-140px)]">
         {/* Header */}
-        <div className="p-5 border-b border-slate-200 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-semibold">
-            AI
-          </div>
-          <div className="flex flex-col">
-            <div className="font-semibold text-slate-900">Asistente Educativo IA</div>
-            <div className="text-xs text-slate-500">
-              {loading ? (
-                <span className="text-blue-600">Pensando…</span>
-              ) : (
-                <span className="text-green-600">En línea</span>
-              )}
-              <span> • Listo para ayudarte</span>
+        <div className="p-5 border-b border-slate-200 flex items-center gap-3 justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-semibold">
+              AI
+            </div>
+            <div className="flex flex-col">
+              <div className="font-semibold text-slate-900">Asistente Educativo IA</div>
+              <div className="text-xs text-slate-500">
+                {loading ? (
+                  <span className="text-blue-600">Pensando…</span>
+                ) : (
+                  <span className="text-green-600">En línea</span>
+                )}
+                <span> • Listo para ayudarte con documentos educativos</span>
+              </div>
             </div>
           </div>
+          <button
+            onClick={nuevaSesion}
+            className="px-3 py-2 rounded-lg text-blue-600 font-medium flex items-center gap-2 hover:bg-blue-50"
+            title="Nueva conversación"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="text-sm">Nueva</span>
+          </button>
         </div>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50">
+          {messages.length === 0 && (
+            <div className="text-center text-slate-400 mt-10">
+              <p className="text-lg font-medium mb-2">¡Hola! Soy tu asistente educativo con IA</p>
+              <p className="text-sm">Puedo ayudarte con información de los documentos educativos disponibles.</p>
+              <p className="text-xs mt-4 text-slate-500">Ejemplo: "¿Qué dice el capítulo 2 sobre metodologías?"</p>
+            </div>
+          )}
           {messages.map((m, i) => (
             <div key={i} className={`w-full flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div
@@ -108,7 +120,7 @@ const Chatbot: React.FC = () => {
               <span>Enviar</span>
             </button>
           </div>
-          <div className="text-xs text-slate-500 mt-2">Sugerencia: "¿Cómo puedo hacer más atractiva una clase sobre fracciones?"</div>
+          <div className="text-xs text-slate-500 mt-2">💡 La IA busca en los documentos educativos para darte respuestas precisas</div>
         </div>
       </div>
     </div>

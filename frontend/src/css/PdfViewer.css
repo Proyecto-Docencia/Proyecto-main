@@ -1,0 +1,301 @@
+/* Estilos para el visor de contenido PDF */
+
+.pdf-html-viewer-wrapper {
+  width: 100%;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.pdf-content {
+  font-size: 1.05rem;
+  line-height: 2;
+  color: #1e293b;
+  letter-spacing: 0.01em;
+  word-spacing: 0.05em;
+}
+
+/* Párrafos - sin indentación, mejor espaciado */
+.pdf-content p {
+  margin: 1.2rem 0 !important;
+  text-indent: 0 !important;
+  text-align: justify;
+  hyphens: auto;
+  word-wrap: break-word;
+}
+
+/* Títulos y encabezados */
+.pdf-content h1,
+.pdf-content h2,
+.pdf-content h3 {
+  margin-top: 2.5rem !important;
+  margin-bottom: 1.5rem !important;
+  line-height: 1.4;
+  font-weight: 700;
+  color: #1e40af;
+}
+
+.pdf-content h2 {
+  font-size: 1.6em;
+  border-bottom: 3px solid #3b82f6;
+  padding-bottom: 0.5rem;
+  letter-spacing: 0.3px;
+}
+
+.pdf-content h3 {
+  font-size: 1.3em;
+  border-bottom: 2px solid #60a5fa;
+  padding-bottom: 0.4rem;
+}
+
+/* Listas */
+.pdf-content ul {
+  margin: 1.5rem 0 !important;
+  padding: 0;
+  list-style: none;
+}
+
+.pdf-content li {
+  margin-bottom: 1rem !important;
+  padding-left: 2rem;
+  position: relative;
+  line-height: 1.9;
+}
+
+.pdf-content li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #3b82f6;
+  font-weight: 700;
+  font-size: 1.2em;
+}
+
+.pdf-content ol {
+  margin: 1.5rem 0 !important;
+  padding-left: 2rem;
+  counter-reset: item;
+  list-style: none;
+}
+
+.pdf-content ol li {
+  counter-increment: item;
+}
+
+.pdf-content ol li::before {
+  content: counter(item) ". ";
+  color: #3b82f6;
+  font-weight: 700;
+  font-size: 1.1em;
+}
+
+/* Texto en negrita */
+.pdf-content strong {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* Texto en cursiva */
+.pdf-content em {
+  font-style: italic;
+  color: #334155;
+}
+
+/* Citas y referencias */
+.pdf-content cite,
+.pdf-content .reference {
+  color: #64748b;
+  font-size: 0.9em;
+  font-style: italic;
+}
+
+/* Blockquotes */
+.pdf-content blockquote {
+  margin: 1.5rem 0;
+  padding: 1rem 1.5rem;
+  border-left: 4px solid #3b82f6;
+  background: #f8fafc;
+  font-style: italic;
+  color: #475569;
+}
+
+/* Código inline */
+.pdf-content code {
+  padding: 0.2em 0.4em;
+  background: #f1f5f9;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  color: #dc2626;
+}
+
+/* Bloques de código */
+.pdf-content pre {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #1e293b;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.pdf-content pre code {
+  color: #f1f5f9;
+  background: transparent;
+  padding: 0;
+}
+
+/* Imágenes y figuras */
+.pdf-content figure {
+  margin: 2.5rem auto !important;
+  text-align: center;
+}
+
+.pdf-content img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pdf-content img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  cursor: zoom-in;
+}
+
+.pdf-content figcaption {
+  margin-top: 0.75rem;
+  font-size: 0.9em;
+  color: #64748b;
+  font-style: italic;
+}
+
+/* Tablas */
+.pdf-content table {
+  margin: 1.5rem 0;
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #e2e8f0;
+}
+
+.pdf-content th,
+.pdf-content td {
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.pdf-content th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.pdf-content tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.pdf-content tr:hover {
+  background: #f1f5f9;
+}
+
+/* Enlaces */
+.pdf-content a {
+  color: #3b82f6;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.pdf-content a:hover {
+  border-bottom-color: #3b82f6;
+}
+
+/* Separadores */
+.pdf-content hr {
+  margin: 2rem 0;
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e2e8f0 20%, #e2e8f0 80%, transparent);
+}
+
+/* Scroll suave */
+.pdf-html-viewer-wrapper::-webkit-scrollbar {
+  width: 10px;
+}
+
+.pdf-html-viewer-wrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 5px;
+}
+
+.pdf-html-viewer-wrapper::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 5px;
+}
+
+.pdf-html-viewer-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .pdf-content {
+    font-size: 1rem;
+    line-height: 1.8;
+  }
+
+  .pdf-content h2 {
+    font-size: 1.4em;
+  }
+
+  .pdf-content h3 {
+    font-size: 1.2em;
+  }
+
+  .pdf-content p {
+    margin: 1rem 0 !important;
+  }
+
+  .pdf-content ul,
+  .pdf-content ol {
+    margin: 1rem 0 !important;
+  }
+
+  .pdf-content li {
+    padding-left: 1.5rem;
+  }
+
+  .pdf-content figure {
+    margin: 1.5rem auto !important;
+  }
+}
+
+/* Animación de carga */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pdf-content > * {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Selección de texto */
+.pdf-content ::selection {
+  background: #bfdbfe;
+  color: #1e293b;
+}
+
+.pdf-content ::-moz-selection {
+  background: #bfdbfe;
+  color: #1e293b;
+}

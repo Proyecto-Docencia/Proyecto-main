@@ -54,17 +54,51 @@ export async function deletePlanificacion(id: number) {
   return resp.json();
 }
 
-export async function crearChat(mensaje_usuario: string) {
+export async function crearChat(mensaje_usuario: string, sesion_id?: number | null) {
+  const body: any = { mensaje_usuario };
+  if (sesion_id) {
+    body.sesion_id = sesion_id;
+  }
+  
   const resp = await fetch(api('chat/crear/'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({ mensaje_usuario }),
+    body: JSON.stringify(body),
   });
   if (!resp.ok) {
     const errorData = await resp.json().catch(() => ({}));
     throw new Error(errorData.error || 'No se pudo enviar el mensaje');
   }
+  return resp.json();
+}
+
+export async function crearSesion(titulo?: string) {
+  const resp = await fetch(api('chat/sesiones/crear/'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ titulo: titulo || 'Nueva conversación' }),
+  });
+  if (!resp.ok) throw new Error('No se pudo crear la sesión');
+  return resp.json();
+}
+
+export async function obtenerSesion(sesion_id: number) {
+  const resp = await fetch(api(`chat/sesiones/${sesion_id}/`), {
+    method: 'GET',
+    credentials: 'include',
+  });
+  if (!resp.ok) throw new Error('No se pudo cargar la sesión');
+  return resp.json();
+}
+
+export async function fetchMisSesiones() {
+  const resp = await fetch(api('chat/sesiones/'), {
+    method: 'GET',
+    credentials: 'include',
+  });
+  if (!resp.ok) throw new Error('No se pudo cargar las sesiones');
   return resp.json();
 }
 
