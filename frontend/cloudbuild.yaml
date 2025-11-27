@@ -47,7 +47,7 @@ substitutions:
   _CPU: '1'
   _MIN_INSTANCES: '0'
   _MAX_INSTANCES: '5'
-  _VITE_API_BASE_URL: 'https://backend-django-a6zccy3fma-uc.a.run.app'
+  _VITE_API_BASE_URL: 'https://backend-django-grduktq54q-uc.a.run.app'
 
 options:
   logging: CLOUD_LOGGING_ONLY

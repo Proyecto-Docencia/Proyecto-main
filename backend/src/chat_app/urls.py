@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import (
+    test_chat,
     mis_chats, 
     crear_chat,
     mis_sesiones,
@@ -8,6 +9,9 @@ from .views import (
 )
 
 urlpatterns = [
+    # Test endpoint
+    path("test/", test_chat, name="test_chat"),
+    
     # Endpoints de sesiones (nuevo)
     path("sesiones/", mis_sesiones, name="mis_sesiones"),
     path("sesiones/crear/", crear_sesion, name="crear_sesion"),

@@ -16,14 +16,16 @@ except ImportError:  # pragma: no cover
     np = None  # type: ignore
 
 _EMBED_LOCK = threading.Lock()
-_EMBED_MODEL = None  # lazy loaded sentence-transformers model
+_EMBED_MODEL = None  # lazy loaded embedding model (sentence-transformers or FlagEmbedding)
 _MATRIX = None       # numpy matrix (n_chunks x dim)
 _CHUNKS: List["ChunkMeta"] = []
 
-DEFAULT_MODEL = os.environ.get("RAG_MODEL_SENTENCE", "all-MiniLM-L6-v2")
+# Modelo de embeddings: gte-Qwen2-7B (MEJOR con GPU) o bge-m3 (fallback CPU)
+DEFAULT_MODEL = os.environ.get("RAG_MODEL_SENTENCE", "Alibaba-NLP/gte-Qwen2-7B-instruct")
+USE_GPU = os.environ.get("RAG_USE_GPU", "1") == "1"  # Auto-detecta GPU si está disponible
 EMBED_CACHE_PATH = os.environ.get("RAG_EMBED_CACHE", "/app/rag_cache/embeddings.npz")
-TOP_K_DEFAULT = int(os.environ.get("RAG_TOP_K", "5"))
-MIN_SCORE = float(os.environ.get("RAG_MIN_SCORE", "0.25"))
+TOP_K_DEFAULT = int(os.environ.get("RAG_TOP_K", "5"))  # Balanceado para respuestas concisas
+MIN_SCORE = float(os.environ.get("RAG_MIN_SCORE", "0.45"))  # Umbral alto con gte-Qwen2-7B
 BACKEND_KIND = os.environ.get("RAG_BACKEND", "local").lower()  # 'local' | 'azure'
 AZURE_SEARCH_ENDPOINT = os.environ.get("AZURE_SEARCH_ENDPOINT")
 AZURE_SEARCH_KEY = os.environ.get("AZURE_SEARCH_KEY")
@@ -39,20 +41,44 @@ class ChunkMeta:
 
 
 def _lazy_load_model():  # pragma: no cover (IO heavy)
+    """Carga el modelo de embeddings optimizado para GPU o CPU."""
     global _EMBED_MODEL
     if _EMBED_MODEL is not None:
         return _EMBED_MODEL
+    
+    # Detectar si hay GPU disponible
+    import torch
+    device = "cuda" if USE_GPU and torch.cuda.is_available() else "cpu"
+    print(f"[RAG] 🚀 Inicializando modelo {DEFAULT_MODEL} en {device.upper()}")
+    
+    if USE_GPU and torch.cuda.is_available():
+        print(f"[RAG] 🎮 GPU detectada: {torch.cuda.get_device_name(0)}")
+        print(f"[RAG] 💾 Memoria GPU disponible: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB")
+    
+    # Intentar cargar con sentence-transformers (compatible con gte-Qwen2-7B)
     try:
-        from sentence_transformers import SentenceTransformer  # heavy import local
+        from sentence_transformers import SentenceTransformer
+        _EMBED_MODEL = SentenceTransformer(
+            DEFAULT_MODEL,
+            device=device,
+            trust_remote_code=True  # Necesario para gte-Qwen2-7B
+        )
+        
+        # Configurar para máximo rendimiento en GPU
+        if device == "cuda":
+            _EMBED_MODEL.max_seq_length = 8192  # gte-Qwen2-7B soporta 32k, usamos 8k para balance
+            print(f"[RAG] ⚡ Configuración GPU: max_seq_length={_EMBED_MODEL.max_seq_length}")
+        
+        print(f"[RAG] ✅ Modelo cargado: {DEFAULT_MODEL} ({device.upper()})")
+        return _EMBED_MODEL
     except ImportError:
-        print("[RAG] sentence-transformers no instalado. BACKEND_KIND=local no podrá hacer retrieval.")
+        print("[RAG] ❌ sentence-transformers no instalado.")
         return None
-    try:
-        _EMBED_MODEL = SentenceTransformer(DEFAULT_MODEL)
-    except Exception as e:  # pragma: no cover
-        print(f"[RAG] Error cargando modelo de embeddings: {e}")
+    except Exception as e:
+        print(f"[RAG] ❌ Error cargando modelo: {e}")
+        import traceback
+        traceback.print_exc()
         return None
-    return _EMBED_MODEL
 
 
 def _load_embeddings_if_available():  # pragma: no cover
@@ -79,8 +105,31 @@ def ensure_ready():  # pragma: no cover
 
 
 def embed_texts(texts: Sequence[str]):  # pragma: no cover
+    """Genera embeddings con configuración optimizada para GPU."""
     model = _lazy_load_model()
-    return model.encode(list(texts), normalize_embeddings=True)
+    if model is None:
+        return None
+    
+    # Batch size optimizado para GPU L4 (16GB VRAM)
+    batch_size = 32 if USE_GPU else 8
+    
+    import torch
+    if USE_GPU and torch.cuda.is_available():
+        # Usar precisión mixta para mayor velocidad en GPU
+        with torch.cuda.amp.autocast():
+            return model.encode(
+                list(texts), 
+                normalize_embeddings=True,
+                batch_size=batch_size,
+                show_progress_bar=False
+            )
+    else:
+        return model.encode(
+            list(texts), 
+            normalize_embeddings=True,
+            batch_size=batch_size,
+            show_progress_bar=False
+        )
 
 
 def _search_local(query: str, top_k: Optional[int]) -> List[Dict[str, Any]]:

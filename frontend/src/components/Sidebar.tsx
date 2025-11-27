@@ -85,14 +85,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onExpandChange }) => {
       icon: <PlusCircle className="sidebar-icon" />,
       subItems: [
         { title: 'Planificación con Asistente IA', path: '/planificacion/asistente-ia' },
-        { title: 'Nueva planificación', path: '/planificacion/nueva' },
+        { title: 'Ver mi planificación', path: '/planificacion/nueva' },
         { title: 'Verificación con IA', path: '/planificacion/verificacion' },
         { title: 'Mis planificaciones', path: '/planificacion/mis-planificaciones' }
       ]
     },
     {
       id: 'asistenteIA',
-      title: 'Asistente IA',
+      title: 'Asistente IA DANIA',
       icon: <MessageCircle className="sidebar-icon" />,
       path: '/chatbot', // Ajustado: la ruta real en App.tsx es /chatbot
       subItems: []

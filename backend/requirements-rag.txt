@@ -1,6 +1,11 @@
 -r requirements.txt
 
-# Dependencias adicionales sólo si se habilita RAG local
+# Dependencias RAG con soporte GPU (NVIDIA L4) - Optimizadas para gte-Qwen2-7B
 pypdf>=4.2.0
-sentence-transformers>=2.7.0
-numpy>=1.26.0
+sentence-transformers==5.1.2
+numpy>=1.26.0,<3.0.0
+torch>=2.1.0
+transformers==4.57.0
+accelerate>=1.2.1
+# Trust remote code necesario para gte-Qwen2-7B
+huggingface-hub>=0.28.0

@@ -49,10 +49,12 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'config.safari_middleware.CORSCredentialsMiddleware',  # Mejorar CORS para Safari
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'config.safari_middleware.SafariCookieMiddleware',  # Asegurar cookies en Safari
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -163,10 +165,38 @@ CSRF_TRUSTED_ORIGINS: list[str] = _csrf_trusted_list
 
 CORS_ALLOW_CREDENTIALS = True
 
+# Configuración de autenticación
+LOGIN_URL = '/api/v1/auth/login/'  # Evita redirección a /accounts/login/
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+
 # Configuración de cookies para cross-origin (necesario para frontend en dominio diferente)
+# Dominio de cookies (sin esto iOS Safari puede rechazar las cookies)
+SESSION_COOKIE_DOMAIN = os.environ.get('COOKIE_DOMAIN', None)  # Ej: '.run.app' para compartir entre subdominios
+CSRF_COOKIE_DOMAIN = os.environ.get('COOKIE_DOMAIN', None)
+
+# Cookies seguras para HTTPS
 SESSION_COOKIE_SECURE = not DEBUG  # True en producción (HTTPS)
-SESSION_COOKIE_SAMESITE = 'None' if not DEBUG else 'Lax'  # None permite cross-origin con HTTPS
-SESSION_COOKIE_HTTPONLY = True  # Protección XSS
 CSRF_COOKIE_SECURE = not DEBUG  # True en producción (HTTPS)
-CSRF_COOKIE_SAMESITE = 'None' if not DEBUG else 'Lax'  # None permite cross-origin con HTTPS
-CSRF_COOKIE_HTTPONLY = False  # JavaScript debe leer CSRF token
+
+# SameSite: None permite cross-origin, pero requiere Secure=True (HTTPS)
+# En iOS Safari, es crítico que sea None para cross-origin
+SESSION_COOKIE_SAMESITE = 'None' if not DEBUG else 'Lax'
+CSRF_COOKIE_SAMESITE = 'None' if not DEBUG else 'Lax'
+
+# HttpOnly: protección XSS, pero CSRF debe ser accesible por JS
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False  # Debe ser False para que JS pueda leer el token
+
+# Nombres de cookies (por si hay conflictos)
+SESSION_COOKIE_NAME = 'sessionid'
+CSRF_COOKIE_NAME = 'csrftoken'
+
+# Path de cookies (asegurar que apliquen a toda la app)
+SESSION_COOKIE_PATH = '/'
+CSRF_COOKIE_PATH = '/'
+
+# Configuración adicional para Safari/Mac (muy importante)
+SESSION_COOKIE_AGE = 86400  # 24 horas en segundos
+SESSION_SAVE_EVERY_REQUEST = True  # Renovar sesión en cada request (crítico para Safari)
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Usar DB para persistencia

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
+import { initializeCSRFToken, diagnoseCookieIssues, isSafariBrowser, waitForCookies } from '../utils/csrf';
 
 interface User {
   id: string;
@@ -44,6 +45,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = useCallback(async (email: string, password: string) => {
     if (!(email && password)) return;
+    
+    // Diagnóstico para iOS (solo en desarrollo)
+    if (import.meta.env.DEV) {
+      const diagnosis = diagnoseCookieIssues();
+      console.log('Cookie diagnosis (iOS check):', diagnosis);
+    }
+    
     // Limpiar identidad previa para evitar credenciales obsoletas
     try {
       localStorage.removeItem('authUser');
@@ -54,18 +62,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Intento real contra backend
     let backendWorked = false;
     try {
-  const base = (import.meta.env.VITE_API_BASE_URL || (window as any).__API_BASE__ || '').replace(/\/$/, '');
-  const loginUrl = `${base}/api/v1/auth/login/`;
-  const profileUrl = `${base}/api/v1/auth/profile/`;
-  const resp = await fetch(loginUrl, {
+      const base = (import.meta.env.VITE_API_BASE_URL || (window as any).__API_BASE__ || '').replace(/\/$/, '');
+      
+      // CRÍTICO para iOS: Inicializar CSRF token antes del login
+      await initializeCSRFToken();
+      
+      const loginUrl = `${base}/api/v1/auth/login/`;
+      const profileUrl = `${base}/api/v1/auth/profile/`;
+      const resp = await fetch(loginUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
         credentials: 'include',
       });
       if (resp.ok) {
+        // CRÍTICO para Safari: Esperar a que las cookies se procesen
+        if (isSafariBrowser()) {
+          await waitForCookies(500);
+        }
+        
         // Cargar perfil desde backend
-  const pResp = await fetch(profileUrl, {
+        const pResp = await fetch(profileUrl, {
           method: 'GET',
           credentials: 'include',
         });

@@ -2,8 +2,8 @@
 
 .welcome-page {
   min-height: calc(100vh - 80px);
-  padding: 48px 32px;
-  max-width: 960px;
+  padding: 56px 32px;
+  max-width: 1600px; /* increase to give more horizontal room for 4 cards */
   margin: 0 auto;
   font-family: Inter, system-ui, sans-serif;
   position: relative;
@@ -51,7 +51,7 @@
 
 /* Sección del video de bienvenida */
 .welcome-video-section {
-  margin: 36px 0;
+  margin: 48px 0;
 }
 
 .welcome-video-container {
@@ -61,6 +61,28 @@
   padding: 16px;
   box-shadow: var(--shadow);
   backdrop-filter: blur(1px);
+}
+
+/* Override for the header card so global .welcome-card changes don't affect it */
+.welcome-header .welcome-card {
+  padding: 22px; /* original header padding */
+  min-height: unset;
+  height: auto;
+    max-width: 980px; /* Match the intro-video container width to keep both elements aligned */
+  margin-bottom: 12px;
+    /* Center the header card so it aligns with the centered video below */
+    margin: 0 auto 12px;
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+/* Limit the intro video container so it doesn't stretch with larger page max-width
+   The expanded video (inside .welcome-expanded .expanded-video) keeps its larger size */
+.welcome-video-section .welcome-video-container {
+  max-width: 980px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .welcome-video {
@@ -74,8 +96,10 @@
 
 .welcome-cards {
   display: grid;
-  gap: 24px;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 36px; /* more breathing room between cards */
+  /* For large screens keep 4 cards aligned in a single row, but give each a sensible minimum width */
+  grid-template-columns: repeat(4, minmax(280px, 1fr));
+  align-items: start; /* align card tops */
   margin: 48px 0;
 }
 
@@ -83,16 +107,45 @@
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  padding: 20px 22px;
+  padding: 28px 30px; /* slightly more padding for breathing room */
   box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px; /* larger gap between icon/header/text */
   backdrop-filter: blur(1px);
+  height: 100%; /* ensure cards stretch to same height in the grid */
+  min-height: 320px; /* give cards additional vertical space so text wraps less tightly */
 }
 
-.welcome-card h3 { margin: 0; font-size: 1.05rem; font-weight: 600; color: var(--color-primary); }
-.welcome-card p { margin: 0; font-size: .85rem; line-height: 1.5; color: var(--color-text-soft); }
+/* Actions area inside each card (CTA button row) */
+.card-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.welcome-cta {
+  display: inline-block;
+  padding: 8px 14px;
+  background: linear-gradient(180deg, rgba(99,102,241,1) 0%, rgba(79,70,229,1) 100%);
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: .95rem;
+  text-decoration: none;
+  box-shadow: 0 4px 10px rgba(79,70,229,0.12);
+  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+}
+
+.welcome-cta:hover, .welcome-cta:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(79,70,229,0.16);
+  opacity: 0.98;
+}
+
+.welcome-card h3 { margin: 0; font-size: 1.18rem; font-weight: 700; color: var(--color-primary); }
+.welcome-card p { margin: 0; font-size: 1rem; line-height: 1.8; color: var(--color-text); font-weight: 600; }
 
 .welcome-block {
   background: var(--color-bg);
@@ -107,8 +160,104 @@
 .welcome-block ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; font-size: .93rem; color: var(--color-text); }
 .welcome-block p { margin-top: 18px; font-size: .85rem; color: var(--color-text-soft); }
 
+/* Responsive rules: 2 columns on medium, 1 column on small screens */
+@media (max-width: 1024px){
+  .welcome-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 @media (max-width: 640px){
   .welcome-page { padding: 40px 20px; }
   .welcome-header h1 { font-size: 1.9rem; }
-  .welcome-cards { margin: 36px 0; }
+  .welcome-cards { grid-template-columns: 1fr; margin: 36px 0; }
 }
+
+/* Expanded panel layout when a card is selected */
+.welcome-expanded {
+  display: grid;
+  /* make the video column slightly larger so the video appears bigger when expanded */
+  grid-template-columns: 1.4fr 1fr;
+  gap: 24px;
+  margin: 36px 0;
+}
+
+.expanded-panel {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+}
+
+.expanded-panel h2 {
+  margin: 0 0 12px;
+  font-size: 1.4rem;
+  color: var(--color-primary);
+}
+
+.expanded-panel p { color: var(--color-text); line-height: 1.7; }
+
+.expanded-video .welcome-video.small {
+  height: 100%;
+  max-height: 520px; /* increased so video displays noticeably larger in expanded state */
+  width: 100%;
+  border-radius: 10px;
+  transition: max-height 220ms ease, transform 220ms ease;
+  object-fit: cover;
+}
+
+.close-expanded {
+  float: right;
+  /* Use the CTA gradient to match the provided button color and make the icon white */
+  background: linear-gradient(180deg, rgba(99,102,241,1) 0%, rgba(79,70,229,1) 100%);
+  border: none;
+  cursor: pointer;
+  color: #fff; /* icon will be white via currentColor */
+  width: 40px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(79,70,229,0.12);
+  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+  padding: 6px;
+}
+
+.close-expanded:hover, .close-expanded:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(79,70,229,0.16);
+  opacity: 0.98;
+}
+
+/* Stronger override to prevent global .close-expanded rules (e.g. from Materials.css)
+   that change the background to white on hover. Apply within the welcome-expanded
+   context so other pages keep their behavior. */
+.welcome-expanded .close-expanded,
+.welcome-expanded .close-expanded:hover,
+.welcome-header .close-expanded,
+.welcome-header .close-expanded:hover {
+  background: linear-gradient(180deg, rgba(99,102,241,1) 0%, rgba(79,70,229,1) 100%) !important;
+  color: #fff !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 14px rgba(79,70,229,0.16) !important;
+}
+
+.expanded-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+@media (max-width: 860px){
+  .welcome-expanded { grid-template-columns: 1fr; }
+  /* keep a sensible maximum on smaller viewports */
+  .expanded-video .welcome-video.small { max-height: 320px; }
+}
+
+/* Make the welcome cards visibly clickable */
+.welcome-card[role="button"] { cursor: pointer; }
+.welcome-card[role="button"]:hover { transform: translateY(-4px); transition: transform 0.12s ease; }

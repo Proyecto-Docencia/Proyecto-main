@@ -2,17 +2,20 @@ from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.hashers import make_password
 from django.core.mail import send_mail
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
 import json
 from .models import Profile
 
 ERR_INVALID_REQUEST = {'error': 'Invalid request'}
+DEBUG = settings.DEBUG
 
 User = get_user_model()
 
 @csrf_exempt
+@ensure_csrf_cookie
 def login_view(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -26,7 +29,24 @@ def login_view(request):
         user = authenticate(request, username=user.username, password=password)
         if user is not None:
             login(request, user)
-            return JsonResponse({'message': 'Login successful'})
+            response = JsonResponse({'message': 'Login successful'})
+            
+            # Forzar que la cookie de sesión se envíe en la respuesta (crítico para Safari/iOS)
+            response.set_cookie(
+                key='sessionid',
+                value=request.session.session_key,
+                max_age=86400,  # 24 horas
+                secure=not DEBUG,
+                httponly=True,
+                samesite='None' if not DEBUG else 'Lax',
+                path='/'
+            )
+            
+            # Headers adicionales para Safari
+            response['Vary'] = 'Cookie, Origin'
+            response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            
+            return response
         return JsonResponse({'error': 'Invalid credentials'}, status=401)
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
@@ -111,12 +131,21 @@ def profile_view(request):
 
     for field in ['region', 'comuna', 'telefono', 'rut', 'direccion', 'sede']:
         if field in payload:
-            setattr(profile, field, payload[field] or '')
-
-    if 'facultades' in payload:
-        profile.facultades = payload.get('facultades') or []
-    if 'carreras' in payload:
-        profile.carreras = payload.get('carreras') or []
-
+            setattr(profile, field, payload[field])
+    
+    for field in ['facultades', 'carreras']:
+        if field in payload:
+            setattr(profile, field, payload[field])
+    
     profile.save()
     return JsonResponse({'message': 'Profile updated'})
+
+
+@ensure_csrf_cookie
+@require_http_methods(["GET"])
+def get_csrf_token(request):
+    """
+    Endpoint para obtener CSRF token. 
+    Crítico para iOS Safari que puede tener problemas recibiendo cookies automáticamente.
+    """
+    return JsonResponse({'detail': 'CSRF cookie set'})

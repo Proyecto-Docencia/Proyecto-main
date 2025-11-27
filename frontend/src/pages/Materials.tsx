@@ -11,8 +11,10 @@ import {
   FileDown,
   ChevronLeft,
   LucideProps,
+  PenLine,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import MarkdownMessage from '../components/MarkdownMessage';
 import '../css/Materials.css';
 import { materials } from '../data/materials';
 import { useChat } from '../hooks/useChat';
@@ -149,6 +151,13 @@ const Materials: React.FC = () => {
                           Video
                         </div>
                       )}
+                      <Link 
+                        to="/planificacion/asistente-ia"
+                        className="icon-indicator planificacion"
+                      >
+                        <PenLine className="w-3 h-3" />
+                        Planificación
+                      </Link>
                     </div>
 
                     <Link
@@ -189,7 +198,9 @@ const Materials: React.FC = () => {
                   key={`chat-msg-${msg.role}-${index}`}
                   className={`cs-msg ${msg.role}`}
                 >
-                  <div className="cs-bubble">{msg.text}</div>
+                  <div className="cs-bubble">
+                    <MarkdownMessage content={msg.text} isUser={msg.role === 'user'} />
+                  </div>
                 </div>
               ))}
               {chatLoading && (

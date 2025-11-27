@@ -41,6 +41,7 @@ const MaterialDetail: React.FC = () => {
   const podcastUrl = rawPodcast ? (/[%]/.test(rawPodcast) ? rawPodcast : encodeURI(rawPodcast)) : undefined;
   const isMp4 = !!videoUrl && /\.mp4($|\?)/i.test(videoUrl);
   const isPodcastMp4 = !!podcastUrl && /\.mp4($|\?)/i.test(podcastUrl);
+  const inlineHtml = (material as any).inlineHtml as string | undefined;
 
   // Cargar y extraer texto del PDF cuando se selecciona "pdf"
   // Lógica de extracción movida a PdfHtmlViewer
@@ -102,6 +103,28 @@ const MaterialDetail: React.FC = () => {
                       <FileDown className="w-4 h-4" style={{marginRight:4}} /> Descargar PDF
                     </a>
                   )}
+                  <Link to="/planificacion/asistente-ia" className="btn-expanded" style={{ 
+                    backgroundColor: '#fbbf24', 
+                    color: '#1f2937',
+                    fontWeight: '600',
+                    whiteSpace: 'nowrap',
+                    border: 'none',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '0.5rem',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f59e0b';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#fbbf24';
+                  }}
+                  >
+                    Crear Planificación
+                  </Link>
                 </div>
               </div>
               {viewMode === 'video' ? (
@@ -111,8 +134,9 @@ const MaterialDetail: React.FC = () => {
                       <video
                         src={videoUrl}
                         style={{ width: '100%', maxHeight: 560, display: 'block', background: '#000' }}
-                        controls
-                        controlsList="nodownload"
+                          controls
+                          controlsList="nodownload"
+                          onContextMenu={(e) => e.preventDefault()}
                       >
                         Tu navegador no soporta la reproducción de video.
                       </video>
@@ -139,6 +163,8 @@ const MaterialDetail: React.FC = () => {
                         src={podcastUrl}
                         style={{ width: '100%' }}
                         controls
+                        controlsList="nodownload"
+                        onContextMenu={(e) => e.preventDefault()}
                       >Tu navegador no soporta audio HTML5.</audio>
                     ) : (
                       <p style={{ color:'#64748b', margin:0 }}>Formato de podcast no reconocido.</p>
@@ -151,7 +177,9 @@ const MaterialDetail: React.FC = () => {
                 )
               ) : (
                 <>
-                  {pdfUrl ? (
+                  {inlineHtml ? (
+                    <div className="pdf-content" style={{ padding: '0.5rem 0' }} dangerouslySetInnerHTML={{ __html: inlineHtml }} />
+                  ) : pdfUrl ? (
                     <PdfHtmlViewer pdfUrl={pdfUrl} />
                   ) : (
                     <div style={{ padding: '1rem', color: '#64748b' }}>No hay PDF disponible para este material.</div>

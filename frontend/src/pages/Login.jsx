@@ -97,6 +97,39 @@ const Login = () => {
           </div>
           <h1>Portal Docente</h1>
           <p>Bienvenido al portal docente USS</p>
+          
+          {/* Logo DANIA */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginTop: '2em',
+            marginBottom: '1em'
+          }}>
+            <div style={{
+              width: '180px',
+              height: '180px',
+              background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1))',
+              borderRadius: '20px',
+              padding: '15px',
+              border: '3px solid rgba(99, 102, 241, 0.2)',
+              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <img 
+                src="/imagenes/Logo_sin_nombre.jpg" 
+                alt="DANIA - Asistente de Alfabetización Digital" 
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  borderRadius: '12px'
+                }}
+              />
+            </div>
+          </div>
         </div>
         <div className="login-form-container">
           <h2>Iniciar Sesión</h2>

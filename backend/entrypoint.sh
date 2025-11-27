@@ -45,5 +45,31 @@ python manage.py migrate --noinput || {
 	exit 1
 }
 
-echo "[entrypoint] Lanzando gunicorn"
-exec gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8080} --workers ${GUNICORN_WORKERS:-3}
+# Ingestar PDFs para RAG si está habilitado
+if [ "$ENABLE_RAG" = "1" ]; then
+	echo "[entrypoint] ENABLE_RAG=1 detectado, verificando embeddings RAG..."
+	EMBED_CACHE_PATH="${RAG_EMBED_CACHE:-/app/rag_cache/embeddings.npz}"
+	
+	if [ ! -f "$EMBED_CACHE_PATH" ]; then
+		echo "[entrypoint] Cache de embeddings no encontrado, ejecutando ingesta de PDFs..."
+		python manage.py ingest_pdfs --dir=rag_proxy/docs || {
+			echo "[entrypoint] ADVERTENCIA: Ingesta de PDFs falló, pero continuando..." >&2
+		}
+	else
+		echo "[entrypoint] Cache de embeddings encontrado en $EMBED_CACHE_PATH, omitiendo ingesta"
+	fi
+fi
+
+echo "[entrypoint] Lanzando gunicorn con configuración optimizada para 8 CPUs"
+# Workers = (2 x CPU) + 1 = 17 (pero limitamos a 9 para dejar recursos a RAG)
+# Threads = 2 por worker para I/O concurrente
+exec gunicorn config.wsgi:application \
+  --bind 0.0.0.0:${PORT:-8080} \
+  --workers ${GUNICORN_WORKERS:-9} \
+  --threads ${GUNICORN_THREADS:-2} \
+  --worker-class ${GUNICORN_WORKER_CLASS:-sync} \
+  --timeout ${GUNICORN_TIMEOUT:-300} \
+  --graceful-timeout ${GUNICORN_GRACEFUL_TIMEOUT:-300} \
+  --max-requests ${GUNICORN_MAX_REQUESTS:-1000} \
+  --max-requests-jitter ${GUNICORN_MAX_REQUESTS_JITTER:-50} \
+  --preload

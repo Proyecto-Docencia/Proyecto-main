@@ -1,6 +1,7 @@
 import React from 'react';
 import { Send, Plus } from 'lucide-react';
 import { useChat } from '../hooks/useChat';
+import MarkdownMessage from '../components/MarkdownMessage';
 
 function nowTime() {
   const d = new Date();
@@ -41,8 +42,12 @@ const Chatbot: React.FC = () => {
         {/* Header */}
         <div className="p-5 border-b border-slate-200 flex items-center gap-3 justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-semibold">
-              AI
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-500 shadow-md">
+              <img 
+                src="/imagenes/Logo_sin_nombre.jpg" 
+                alt="DANIA" 
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="flex flex-col">
               <div className="font-semibold text-slate-900">Asistente Educativo IA</div>
@@ -84,7 +89,7 @@ const Chatbot: React.FC = () => {
                     : 'max-w-[78%] bg-white text-slate-800 rounded-2xl px-4 py-3 shadow-sm border border-slate-200'
                 }
               >
-                <div className="whitespace-pre-wrap leading-relaxed">{m.text}</div>
+                <MarkdownMessage content={m.text} isUser={m.role === 'user'} />
                 <div className={`text-[11px] mt-1 ${m.role === 'user' ? 'text-blue-100' : 'text-slate-400'}`}>{nowTime()}</div>
               </div>
             </div>

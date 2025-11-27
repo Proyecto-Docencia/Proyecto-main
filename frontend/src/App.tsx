@@ -9,9 +9,9 @@ import Materials from './pages/Materials';
 import MaterialDetail from './pages/MaterialDetail';
 import AICenter from './pages/AICenter';
 import Profile from './pages/Profile';
-import PlanificacionNueva from './pages/PlanificacionNueva';
 import MisPlanificaciones from './pages/MisPlanificaciones';
 import PlanificacionAsistenteIA from './pages/PlanificacionAsistenteIA';
+import VerPlanificacionAsistente from './pages/VerPlanificacionAsistente';
 import VerificacionIA from './pages/VerificacionIA';
 import Welcome from './pages/Welcome';
 import Chatbot from './pages/Chatbot';
@@ -46,9 +46,10 @@ function App() {
           {/* Alias para compatibilidad con enlace anterior */}
           <Route path="/asistenteIA" element={<Layout><Chatbot /></Layout>} />
           <Route path="/perfil" element={<Layout><Profile /></Layout>} />
-          <Route path="/planificacion/nueva" element={<Layout><PlanificacionNueva /></Layout>} />
+          <Route path="/planificacion/nueva" element={<Layout><VerPlanificacionAsistente /></Layout>} />
           <Route path="/planificacion/asistente-ia" element={<Layout><PlanificacionAsistenteIA /></Layout>} />
           <Route path="/planificacion/verificacion" element={<Layout><VerificacionIA /></Layout>} />
+          <Route path="/planificacion/verificacion/:planId" element={<Layout><VerificacionIA /></Layout>} />
           <Route path="/planificacion/mis-planificaciones" element={<Layout><MisPlanificaciones /></Layout>} />
           </Routes>
         </div>

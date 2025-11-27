@@ -4,14 +4,14 @@ steps:
     args:
       - 'build'
       - '--build-arg'
-      - 'ENABLE_RAG=${_ENABLE_RAG}'
+      - 'INSTALL_RAG_DEPS=0'
       - '-t'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/my-django-repo/${_SERVICE_NAME}:latest'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/backend-repo/${_SERVICE_NAME}:latest'
       - '.'
 
   # Subir la imagen a Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-django-repo/${_SERVICE_NAME}:latest']
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/backend-repo/${_SERVICE_NAME}:latest']
 
   # Desplegar a Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -21,7 +21,7 @@ steps:
       - 'deploy'
       - '${_SERVICE_NAME}'
       - '--image'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/my-django-repo/${_SERVICE_NAME}:latest'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/backend-repo/${_SERVICE_NAME}:latest'
       - '--region'
       - '${_REGION}'
       - '--platform'
@@ -35,6 +35,11 @@ steps:
       - '${_MEMORY}'
       - '--cpu'
       - '${_CPU}'
+      - '--gpu'
+      - '1'
+      - '--gpu-type'
+      - 'nvidia-l4'
+      - '--no-cpu-throttling'
       - '--min-instances'
       - '${_MIN_INSTANCES}'
       - '--max-instances'
@@ -42,30 +47,35 @@ steps:
       - '--add-cloudsql-instances'
       - '${_CLOUDSQL_INSTANCE}'
       - '--update-env-vars'
-      - DJANGO_SECRET_KEY=${_DJANGO_SECRET_KEY},DJANGO_DEBUG=${_DJANGO_DEBUG},DB_ENGINE=${_DB_ENGINE},DB_HOST=${_DB_HOST},DB_PORT=${_DB_PORT},DB_NAME=${_DB_NAME},DB_USER=${_DB_USER},DB_PASSWORD=${_DB_PASSWORD},CORS_ALLOW_ALL_ORIGINS=${_CORS_ALLOW_ALL_ORIGINS},CSRF_TRUSTED_ORIGINS=${_CSRF_TRUSTED_ORIGINS},ENABLE_RAG=${_ENABLE_RAG},SKIP_DB_WAIT=${_SKIP_DB_WAIT},GEMINI_API_KEY=${_GEMINI_API_KEY},GEMINI_MODEL=${_GEMINI_MODEL}
+      - 'DJANGO_SECRET_KEY=${_DJANGO_SECRET_KEY},DJANGO_DEBUG=${_DJANGO_DEBUG},DB_ENGINE=${_DB_ENGINE},DB_HOST=${_DB_HOST},DB_PORT=${_DB_PORT},DB_NAME=${_DB_NAME},DB_USER=${_DB_USER},DB_PASSWORD=${_DB_PASSWORD},CORS_ALLOW_ALL_ORIGINS=${_CORS_ALLOW_ALL_ORIGINS},CSRF_TRUSTED_ORIGINS=${_CSRF_TRUSTED_ORIGINS},COOKIE_DOMAIN=${_COOKIE_DOMAIN},ENABLE_RAG=${_ENABLE_RAG},SKIP_DB_WAIT=${_SKIP_DB_WAIT},GEMINI_API_KEY=${_GEMINI_API_KEY},GEMINI_MODEL=${_GEMINI_MODEL},GEMINI_THINKING_BUDGET=${_GEMINI_THINKING_BUDGET},RAG_SERVICE_URL=${_RAG_SERVICE_URL},RAG_TIMEOUT=${_RAG_TIMEOUT},GUNICORN_TIMEOUT=${_GUNICORN_TIMEOUT}'
 
 substitutions:
   _SERVICE_NAME: 'backend-django'
   _REGION: 'us-central1'
-  _MEMORY: '2Gi'
-  _CPU: '1'
+  _MEMORY: '32Gi'
+  _CPU: '8'
   _MIN_INSTANCES: '0'
-  _MAX_INSTANCES: '10'
+  _MAX_INSTANCES: '3'
   _ENABLE_RAG: '1'
   _DJANGO_DEBUG: '0'
   _DB_ENGINE: 'mysql'
-  _DJANGO_SECRET_KEY: 'mi-secret-key-super-segura-para-produccion-2024'
-  _CLOUDSQL_INSTANCE: 'gen-lang-client-0776831973:us-central1:admin123'
-  _DB_HOST: '/cloudsql/gen-lang-client-0776831973:us-central1:admin123'
+  _DJANGO_SECRET_KEY: 'nueva-secret-key-super-segura-para-produccion-2025'
+  _CLOUDSQL_INSTANCE: 'docencia-uss-backup-2025:us-central1:docencia-db'
+  _DB_HOST: '/cloudsql/docencia-uss-backup-2025:us-central1:docencia-db'
   _DB_PORT: '3306'
-  _DB_NAME: 'admin123'
+  _DB_NAME: 'docencia_db'
   _DB_USER: 'admin123'
   _DB_PASSWORD: 'tuchangoGG123#'
   _CORS_ALLOW_ALL_ORIGINS: '1'
   _CSRF_TRUSTED_ORIGINS: 'https://*.run.app'
+  _COOKIE_DOMAIN: ''  # Dejar vacío para permitir cookies en cualquier dominio (importante para iOS)
   _SKIP_DB_WAIT: '0'
-  _GEMINI_API_KEY: 'AIzaSyC1L54evpA3D0hvAACzN-Ej0PeQHo0S4Ls'
-  _GEMINI_MODEL: 'gemini-2.0-flash-exp'
+  _GEMINI_API_KEY: 'AIzaSyBPhSEmBjSvhiHECT-XzpCzfRkcBNgK6mY'
+  _GEMINI_MODEL: 'gemini-2.5-pro'
+  _GEMINI_THINKING_BUDGET: '512'
+  _RAG_SERVICE_URL: 'https://rag-service-265462853523.us-central1.run.app'
+  _RAG_TIMEOUT: '30'
+  _GUNICORN_TIMEOUT: '300'
 
 options:
   logging: CLOUD_LOGGING_ONLY

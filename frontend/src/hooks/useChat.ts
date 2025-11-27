@@ -71,8 +71,8 @@ export const useChat = (initialMessages: ChatMessage[] = []) => {
         }
       }
 
-      // Enviar mensaje con sesion_id
-      const resp = await crearChat(userMessage, currentSesionId);
+      // Enviar mensaje con sesion_id y RAG activado
+      const resp = await crearChat(userMessage, currentSesionId, true);
       const aiResponse = resp?.respuesta_ia || 'La IA no devolvió una respuesta válida.';
       setMessages((prev) => [...prev, { role: 'ai', text: aiResponse, id: resp.id, fecha: resp.fecha }]);
     } catch (error) {

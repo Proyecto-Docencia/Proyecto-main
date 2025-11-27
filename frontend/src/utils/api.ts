@@ -54,10 +54,13 @@ export async function deletePlanificacion(id: number) {
   return resp.json();
 }
 
-export async function crearChat(mensaje_usuario: string, sesion_id?: number | null) {
+export async function crearChat(mensaje_usuario: string, sesion_id?: number | null, usar_rag?: boolean) {
   const body: any = { mensaje_usuario };
   if (sesion_id) {
     body.sesion_id = sesion_id;
+  }
+  if (usar_rag !== undefined) {
+    body.usar_rag = usar_rag;
   }
   
   const resp = await fetch(api('chat/crear/'), {
@@ -130,3 +133,94 @@ export async function fetchMisChats() {
   if (!resp.ok) throw new Error('No se pudo cargar los chats');
   return resp.json();
 }
+
+// Nuevas funciones para el sistema de planificación mejorado
+export async function validarPlanificacion(id: number) {
+  const resp = await fetch(api(`plans/${id}/validar/`), {
+    method: 'POST',
+    credentials: 'include',
+  });
+  if (!resp.ok) throw new Error('No se pudo validar la planificación');
+  return resp.json();
+}
+
+export async function generarPDFPlanificacion(id: number) {
+  const resp = await fetch(api(`plans/${id}/pdf/`), {
+    method: 'GET',
+    credentials: 'include',
+  });
+  if (!resp.ok) throw new Error('No se pudo generar el PDF');
+  return resp.blob();
+}
+
+// ==================== API para Planificaciones con Asistente IA ====================
+
+export async function fetchPlanificacionesIA() {
+  const resp = await fetch(api('plans/asistente-ia/'), {
+    method: 'GET',
+    credentials: 'include',
+  });
+  if (!resp.ok) throw new Error('No se pudieron cargar las planificaciones IA');
+  return resp.json();
+}
+
+export async function crearPlanificacionIA(data: any) {
+  const resp = await fetch(api('plans/asistente-ia/'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+  if (!resp.ok) throw new Error('No se pudo crear la planificación IA');
+  return resp.json();
+}
+
+export async function getPlanificacionIADetalle(id: number) {
+  const resp = await fetch(api(`plans/asistente-ia/${id}/`), {
+    method: 'GET',
+    credentials: 'include',
+  });
+  if (!resp.ok) throw new Error('No se pudo cargar la planificación IA');
+  return resp.json();
+}
+
+export async function updatePlanificacionIA(id: number, data: any) {
+  const resp = await fetch(api(`plans/asistente-ia/${id}/`), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+  if (!resp.ok) throw new Error('No se pudo actualizar la planificación IA');
+  return resp.json();
+}
+
+export async function deletePlanificacionIA(id: number) {
+  const resp = await fetch(api(`plans/asistente-ia/${id}/`), {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+  if (!resp.ok) throw new Error('No se pudo eliminar la planificación IA');
+  return resp.json();
+}
+
+export async function validarPlanificacionIA(id: number, feedback: string, capitulos: string[]) {
+  const resp = await fetch(api(`plans/asistente-ia/${id}/validar/`), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ feedback, capitulos }),
+  });
+  if (!resp.ok) throw new Error('No se pudo validar la planificación IA');
+  return resp.json();
+}
+
+export async function generarPDFPlanificacionIA(id: number) {
+  const resp = await fetch(api(`plans/asistente-ia/${id}/pdf/`), {
+    method: 'GET',
+    credentials: 'include',
+  });
+  if (!resp.ok) throw new Error('No se pudo generar el PDF');
+  return resp.blob();
+}
+
